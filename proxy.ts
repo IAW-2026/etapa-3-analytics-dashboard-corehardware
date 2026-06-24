@@ -4,6 +4,10 @@ import { NextResponse } from "next/server";
 
 const isProtectedRoute = createRouteMatcher([
     "/dashboard(.*)",
+    "/finanzas(.*)",
+    "/logistica(.*)",
+    "/usuarios(.*)",
+    "/ventas(.*)",
 ]);
 
 
