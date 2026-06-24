@@ -19,9 +19,6 @@ export default function DashboardPage() {
     return (
         <main className="p-8 bg-neutral-50 dark:bg-neutral-950 min-h-screen">
             <div className="mb-8">
-                <p className="text-xs font-mono tracking-[0.2em] uppercase text-neutral-400 dark:text-neutral-500">
-                    CoreHardware
-                </p>
                 <h1 className="text-2xl font-light tracking-[0.05em] text-neutral-900 dark:text-neutral-100">
                     Dashboard
                 </h1>
