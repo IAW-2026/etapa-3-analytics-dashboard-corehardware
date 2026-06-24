@@ -38,9 +38,6 @@ export default function FinancesPage() {
     return (
         <main className="p-8 bg-neutral-50 dark:bg-neutral-950 min-h-screen">
             <div className="mb-8">
-                <p className="text-xs font-mono tracking-[0.2em] uppercase text-neutral-400 dark:text-neutral-500">
-                    CoreHardware
-                </p>
                 <h1 className="text-2xl font-light tracking-[0.05em] text-neutral-900 dark:text-neutral-100">
                     Finanzas
                 </h1>
@@ -53,8 +50,8 @@ export default function FinancesPage() {
                         key={t}
                         onClick={() => setTab(t)}
                         className={`px-3 py-1.5 text-xs font-mono rounded-md border transition-colors ${tab === t
-                                ? "bg-violet-600 border-violet-600 text-white dark:bg-violet-500 dark:border-violet-500"
-                                : "bg-white dark:bg-neutral-900 border-neutral-200 dark:border-neutral-800 text-neutral-500 dark:text-neutral-400 hover:border-violet-400"
+                            ? "bg-violet-600 border-violet-600 text-white dark:bg-violet-500 dark:border-violet-500"
+                            : "bg-white dark:bg-neutral-900 border-neutral-200 dark:border-neutral-800 text-neutral-500 dark:text-neutral-400 hover:border-violet-400"
                             }`}
                     >
                         {t}
