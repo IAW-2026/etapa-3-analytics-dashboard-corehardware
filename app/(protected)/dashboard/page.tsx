@@ -1,5 +1,5 @@
 import { TrendingUp, ShoppingCart, Truck, AlertTriangle } from "lucide-react";
-import type { Disputa } from "@/types/types";
+import type { Dispute } from "@/types/types";
 
 const KPI_CARDS = [
     { label: "Pedidos totales", key: "orders", icon: ShoppingCart },
@@ -15,7 +15,7 @@ async function fetchDisputasAbiertas(): Promise<number | null> {
             next: { revalidate: 60 },
         });
         if (!res.ok) return null;
-        const data: Disputa[] = await res.json();
+        const data: Dispute[] = await res.json();
         return data.length;
     } catch {
         return null;
