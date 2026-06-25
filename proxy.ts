@@ -11,13 +11,30 @@ const isProtectedRoute = createRouteMatcher([
 ]);
 
 
-function isRole(value: unknown): value is String {
-  return typeof value === "string"
+function isRole(value: unknown): value is string {
+    return typeof value === "string";
 }
 
 
-function canAccess(role: String): boolean {
-  return role == "admin";
+function canAccess(role: string): boolean {
+    return role === "admin";
+}
+
+
+async function getUserRole(userId: string): Promise<unknown> {
+    const client = await clerkClient();
+    const user = await client.users.getUser(userId);
+    return user.publicMetadata?.role;
+}
+
+
+async function authorizeUser(userId: string, req: Request): Promise<NextResponse> {
+    const rawRole = await getUserRole(userId);
+
+    if (!isRole(rawRole)) return new NextResponse("Forbidden", { status: 403 });
+    if (!canAccess(rawRole)) return NextResponse.redirect(new URL("/unauthorized", req.url));
+
+    return NextResponse.next();
 }
 
 
@@ -29,44 +46,29 @@ export default clerkMiddleware(async (auth, req) => {
             const signInUrl = new URL("/sign-in", req.url);
             signInUrl.searchParams.set("redirect_url", req.url);
             return NextResponse.redirect(signInUrl);
-        } else {
-            const client = await clerkClient();
-            const user = await client.users.getUser(userId);
-            const rawRole = user.publicMetadata?.role;
-
-            if (!isRole(rawRole)) {
-                return new NextResponse("Forbidden", { status: 403 });
-            }
-
-            if (!canAccess(rawRole)) {
-                return NextResponse.redirect(new URL("/unauthorized", req.url));
-            }
-
-            return NextResponse.next();
         }
+
+        return authorizeUser(userId, req);
     }
-    
-    if (userId) {
-        const client = await clerkClient();
-        const user = await client.users.getUser(userId);
-        const rawRole = user.publicMetadata?.role;
-        
-        if (!isRole(rawRole)) {
-            return new NextResponse("Forbidden", { status: 403 });
-        }
 
-        return NextResponse.redirect(new URL("/dashboard", req.url));
+    if (req.nextUrl.pathname === "/unauthorized") {
+        return NextResponse.next();
+    }
+
+    if (userId) {
+        const rawRole = await getUserRole(userId);
+
+        if (!isRole(rawRole)) return new NextResponse("Forbidden", { status: 403 });
+
+        return NextResponse.redirect(new URL("/unauthorized", req.url));
     }
 });
 
 
 export const config = {
     matcher: [
-        // Skip Next.js internals and all static files, unless found in search params
         '/((?!_next|[^?]*\\.(?:html?|css|js(?!on)|jpe?g|webp|png|gif|svg|ttf|woff2?|ico|csv|docx?|xlsx?|zip|webmanifest)).*)',
-        // Always run for Clerk's auto-proxy path
         '/__clerk/(.*)',
-        // Always run for API routes
         '/(api|trpc)(.*)',
     ],
 };
