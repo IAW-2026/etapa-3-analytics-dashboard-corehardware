@@ -17,3 +17,10 @@ export type Payment = {
     estado: 'pendiente' | 'acreditado' | 'rechazado' | 'en_proceso' | 'cancelado' | 'reembolsado' | 'contracargo';
     pedidoId: string;
 };
+
+export type Sale = {
+    id: string;
+    date: string;
+    sellerId: string;
+    totalPrice: number;
+};
