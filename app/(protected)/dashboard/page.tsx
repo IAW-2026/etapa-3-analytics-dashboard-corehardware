@@ -1,4 +1,5 @@
 import { TrendingUp, ShoppingCart, Truck, AlertTriangle } from "lucide-react";
+import type { Disputa } from "@/types/types";
 
 const KPI_CARDS = [
     { label: "Pedidos totales", key: "orders", icon: ShoppingCart },
@@ -7,13 +8,28 @@ const KPI_CARDS = [
     { label: "Disputas abiertas", key: "disputes", icon: AlertTriangle },
 ];
 
-export default function DashboardPage() {
-    // TODO: fetch data from APIs
+async function fetchDisputasAbiertas(): Promise<number | null> {
+    try {
+        const res = await fetch(`${process.env.PAYMENTS_APP_URL}/api/disputes?status=open`, {
+            headers: { "x-api-key": process.env.PAYMENTS_API_KEY! },
+            next: { revalidate: 60 },
+        });
+        if (!res.ok) return null;
+        const data: Disputa[] = await res.json();
+        return data.length;
+    } catch {
+        return null;
+    }
+}
+
+export default async function DashboardPage() {
+    const disputasAbiertas = await fetchDisputasAbiertas();
+
     const kpis = {
         orders: "—",
         amount: "—",
         shippings: "—",
-        disputes: "—",
+        disputes: disputasAbiertas === null ? "Error" : String(disputasAbiertas),
     };
 
     return (
@@ -37,7 +53,11 @@ export default function DashboardPage() {
                             </span>
                             <Icon className="w-4 h-4 text-neutral-300 dark:text-neutral-600" />
                         </div>
-                        <span className="text-3xl font-light tracking-tight text-neutral-900 dark:text-neutral-100">
+                        <span className={`text-3xl font-light tracking-tight ${
+                            key === "disputes" && disputasAbiertas === null
+                                ? "text-red-400"
+                                : "text-neutral-900 dark:text-neutral-100"
+                        }`}>
                             {kpis[key as keyof typeof kpis]}
                         </span>
                     </div>
