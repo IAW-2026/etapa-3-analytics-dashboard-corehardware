@@ -31,8 +31,9 @@ async function getUserRole(userId: string): Promise<unknown> {
 async function authorizeUser(userId: string, req: Request): Promise<NextResponse> {
     const rawRole = await getUserRole(userId);
 
-    if (!isRole(rawRole)) return new NextResponse("Forbidden", { status: 403 });
-    if (!canAccess(rawRole)) return NextResponse.redirect(new URL("/unauthorized", req.url));
+    if (!isRole(rawRole) || !canAccess(rawRole)) {
+        return NextResponse.redirect(new URL("/unauthorized", req.url));
+    }
 
     return NextResponse.next();
 }
@@ -40,6 +41,18 @@ async function authorizeUser(userId: string, req: Request): Promise<NextResponse
 
 export default clerkMiddleware(async (auth, req) => {
     const { userId } = await auth();
+
+    if (req.nextUrl.pathname === "/unauthorized") {
+        if (!userId) return NextResponse.redirect(new URL("/", req.url));
+
+        const rawRole = await getUserRole(userId);
+
+        if (isRole(rawRole) && canAccess(rawRole)) {
+            return NextResponse.redirect(new URL("/dashboard", req.url));
+        }
+
+        return NextResponse.next();
+    }
 
     if (isProtectedRoute(req)) {
         if (!userId) {
@@ -51,14 +64,12 @@ export default clerkMiddleware(async (auth, req) => {
         return authorizeUser(userId, req);
     }
 
-    if (req.nextUrl.pathname === "/unauthorized") {
-        return NextResponse.next();
-    }
-
     if (userId) {
         const rawRole = await getUserRole(userId);
 
-        if (!isRole(rawRole)) return new NextResponse("Forbidden", { status: 403 });
+        if (isRole(rawRole) && canAccess(rawRole)) {
+            return NextResponse.redirect(new URL("/dashboard", req.url));
+        }
 
         return NextResponse.redirect(new URL("/unauthorized", req.url));
     }
