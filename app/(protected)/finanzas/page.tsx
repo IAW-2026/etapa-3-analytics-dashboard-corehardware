@@ -1,8 +1,8 @@
-import FinancesTable from "@/components/finances-table";
-import type { Pago, Disputa } from "@/types/types";
+import FinancesView from "@/components/finances/finances-view";
+import type { Payment, Dispute } from "@/types/types";
 
 
-async function fetchPagos(): Promise<Pago[] | null> {
+async function fetchPayments(): Promise<Payment[] | null> {
     try {
         const res = await fetch(`${process.env.PAYMENTS_APP_URL}/api/payments`, {
             headers: { "x-api-key": process.env.PAYMENTS_API_KEY! },
@@ -16,7 +16,7 @@ async function fetchPagos(): Promise<Pago[] | null> {
 }
 
 
-async function fetchDisputas(): Promise<Disputa[] | null> {
+async function fetchDisputes(): Promise<Dispute[] | null> {
     try {
         const res = await fetch(`${process.env.PAYMENTS_APP_URL}/api/disputes`, {
             headers: { "x-api-key": process.env.PAYMENTS_API_KEY! },
@@ -31,7 +31,7 @@ async function fetchDisputas(): Promise<Disputa[] | null> {
 
 
 export default async function FinancesPage() {
-    const [pagos, disputas] = await Promise.all([fetchPagos(), fetchDisputas()]);
+    const [payments, disputes] = await Promise.all([fetchPayments(), fetchDisputes()]);
 
-    return <FinancesTable pagos={pagos} disputas={disputas} />;
+    return <FinancesView payments={payments} disputes={disputes} />;
 }

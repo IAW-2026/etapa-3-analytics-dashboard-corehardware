@@ -1,19 +1,19 @@
-export type Pago = {
+export type Dispute = {
+    id: string;
+    pedidoId: string;
+    fechaDeInicio: string;
+    fechaDeFinalizacion: string | null;
+    estado: 'pendiente' | 'reembolsada' | 'repuesta' | 'rechazada';
+    descripcion: string;
+};
+
+export type Payment = {
     id: string;
     fecha: string;
     buyerId: string;
     sellerId: string;
     formaDePago: string;
-    monto: number;
-    estado: "APROBADO" | "PENDIENTE" | "RECHAZADO";
+    monto: string;
+    estado: 'pendiente' | 'acreditado' | 'rechazado' | 'en_proceso' | 'cancelado' | 'reembolsado' | 'contracargo';
     pedidoId: string;
-};
-
-export type Disputa = {
-    id: string;
-    pedidoId: string;
-    fechaDeInicio: string;
-    fechaDeFinalizacion: string | null;
-    estado: "ABIERTA" | "RESUELTA" | "EN_REVISION";
-    descripcion: string;
 };
