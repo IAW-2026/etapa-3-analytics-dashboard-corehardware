@@ -12,11 +12,10 @@ Herramienta de inteligencia de negocio (Etapa 3): KPIs, gráficos y métricas co
 
 ## Stack
 
-- **Framework:** Next.js 15 (App Router)
+- **Framework:** Next.js 16 (App Router)
 - **Autenticación:** Clerk (rol `admin`)
-- **Estilos:** Tailwind CSS v3.4
-- **Charts:** [Tremor](https://tremor.so) v3 (KPI cards, line charts, bar charts, donuts)
-- **Deploy:** Vercel (branch `produccion`)
+- **Estilos:** Tailwind CSS v4
+- **Deploy:** Vercel
 
 Sin base de datos: todos los datos vienen de las APIs de las 4 apps del ecosistema.
 
@@ -26,17 +25,15 @@ Sin base de datos: todos los datos vienen de las APIs de las 4 apps del ecosiste
 
 ```
 app/                    → páginas Next.js
-  ├ page.tsx            → Dashboard global (KPIs)
+  ├ page.tsx            → Landing Page
+  ├ dashboard/          → Dashboard global (KPIs)
   ├ logistica/          → métricas de envíos (Shipping App)
   ├ ventas/             → métricas de pedidos y productos (Buyer + Seller)
   ├ finanzas/           → ingresos, pagos, disputas (Payments)
   └ usuarios/           → compradores, vendedores, operadores
 components/             → React components reutilizables
-lib/
-  ├ apps.ts             → registro central de las 4 apps
-  ├ client.ts           → cliente HTTP genérico
-  └ auth.ts             → guard de rol admin
-middleware.ts           → bloquea acceso sin rol admin
+types/                  → Tipos de datos
+proxy.ts                → bloquea acceso sin rol admin
 ```
 
 ---
@@ -45,8 +42,7 @@ middleware.ts           → bloquea acceso sin rol admin
 
 | Branch | Uso |
 |--------|-----|
-| `main` | Sólo README (la generada por Classroom) |
-| `produccion` | Branch de deploy (Vercel auto-deploya desde acá) |
+| `main` | Produccion |
 | `develop` | Integración de features |
 | `feature/*` | Features puntuales que se mergean a `develop` |
 
@@ -55,12 +51,12 @@ middleware.ts           → bloquea acceso sin rol admin
 ## Setup local
 
 ```bash
-git clone https://github.com/IAW-2026/etapa-3-analytics-dashboard-corehardware.git
+git clone git@github.com:IAW-2026/etapa-3-analytics-dashboard-corehardware.git
 cd etapa-3-analytics-dashboard-corehardware
 git checkout develop
-npm install
+pnpm install
 # Crear .env.local siguiendo .env.example
-npm run dev
+pnpm dev
 ```
 
 Abrir `http://localhost:3000` y loguearse con un usuario admin de Clerk.
@@ -74,7 +70,7 @@ Abrir `http://localhost:3000` y loguearse con un usuario admin de Clerk.
 | Shipping | `/api/admin/stats/resumen`, `/api/admin/stats/envios-por-estado`, `/api/admin/stats/operadores-top`, `/api/admin/stats/entregas-recientes` | ✅ Listos |
 | Buyer | `/api/control-plane/stats/orders`, `/api/control-plane/stats/buyers` | ❌ Pendientes |
 | Seller | `/api/control-plane/stats/sales`, `/api/control-plane/stats/products` | ❌ Pendientes |
-| Payments | `/api/control-plane/stats/payments`, `/api/control-plane/stats/disputes` | ❌ Pendientes |
+| Payments | `/api/payments`, `/api/disputes` | ✅ Listos |
 
 A medida que cada app expone sus endpoints, el Dashboard los va consumiendo.
 
@@ -89,6 +85,6 @@ A medida que cada app expone sus endpoints, el Dashboard los va consumiendo.
 | Shipping | Matías Junca |
 | Payments | Agustín Ferrante |
 | Control Plane | — |
-| Analytics Dashboard (este) | — |
+| Analytics Dashboard (este) | Agustín Ferrante |
 
 Enunciado completo: <https://iaw-2026.github.io/proyecto/>
