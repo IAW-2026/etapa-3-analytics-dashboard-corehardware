@@ -22,13 +22,31 @@ async function fetchDisputasAbiertas(): Promise<number | null> {
     }
 }
 
+async function fetchEnviosPendientes(): Promise<number | null> {
+    try {
+        const res = await fetch(`${process.env.SHIPPING_APP_URL}/api/analytics/stats/resumen`, {
+            headers: { "X-API-Key": process.env.SHIPPING_API_KEY! },
+            next: { revalidate: 60 },
+        });
+        if (!res.ok) return null;
+        const data = await res.json();
+        // No entregados aún (pendientes de asignar + en curso de reparto).
+        return data.envios.pendientes + data.envios.en_curso;
+    } catch {
+        return null;
+    }
+}
+
 export default async function DashboardPage() {
-    const disputasAbiertas = await fetchDisputasAbiertas();
+    const [disputasAbiertas, enviosPendientes] = await Promise.all([
+        fetchDisputasAbiertas(),
+        fetchEnviosPendientes(),
+    ]);
 
     const kpis = {
         orders: "—",
         amount: "—",
-        shippings: "—",
+        shippings: enviosPendientes === null ? "Error" : String(enviosPendientes),
         disputes: disputasAbiertas === null ? "Error" : String(disputasAbiertas),
     };
 
@@ -54,7 +72,8 @@ export default async function DashboardPage() {
                             <Icon className="w-4 h-4 text-neutral-300 dark:text-neutral-600" />
                         </div>
                         <span className={`text-3xl font-light tracking-tight ${
-                            key === "disputes" && disputasAbiertas === null
+                            (key === "disputes" && disputasAbiertas === null) ||
+                            (key === "shippings" && enviosPendientes === null)
                                 ? "text-red-400"
                                 : "text-neutral-900 dark:text-neutral-100"
                         }`}>
