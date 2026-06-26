@@ -8,6 +8,12 @@ Herramienta de inteligencia de negocio (Etapa 3): KPIs, gráficos y métricas co
 
 > Sólo lectura. No es un CRUD — consulta cada app vía API y visualiza los datos.
 
+## Repositorio sin desarrollo completo planificado
+
+> Tras consultar con la cátedra, se confirmó que las apps **Control Plane** y **Analytics Dashboard** quedan **fuera del alcance** del trabajo para nuestro equipo en esta entrega. El equipo se concentra en las 4 apps base (Buyer, Seller, Shipping, Payments) y su integración inter-servicio.
+>
+> Este repo se entrega con implementacion parcial.
+
 ---
 
 ## Stack
@@ -87,4 +93,4 @@ A medida que cada app expone sus endpoints, el Dashboard los va consumiendo.
 | Control Plane | — |
 | Analytics Dashboard (este) | Agustín Ferrante |
 
-Enunciado completo: <https://iaw-2026.github.io/proyecto/>
+

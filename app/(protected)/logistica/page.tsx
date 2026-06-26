@@ -1,87 +1,21 @@
-"use client";
+import LogisticsView from "@/components/logistics/logistics-view";
+import type { Shipment } from "@/types/types";
 
-import { useState } from "react";
+async function fetchShipments(): Promise<Shipment[] | null> {
+    try {
+        const res = await fetch(`${process.env.SHIPPING_APP_URL}/api/analytics/envios`, {
+            headers: { "X-API-Key": process.env.SHIPPING_API_KEY! },
+            cache: "no-store",
+        });
+        if (!res.ok) return null;
+        const data = await res.json();
+        return data.items;
+    } catch {
+        return null;
+    }
+}
 
-
-const STATES = ["Todos", "PENDIENTE", "EN_CAMINO", "ENTREGADO"];
-
-
-const stateBadge = (state: string) => {
-    const map: Record<string, string> = {
-        PENDIENTE: "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400",
-        EN_CAMINO: "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400",
-        ENTREGADO: "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400",
-    };
-    return map[state] ?? "bg-neutral-100 text-neutral-500 dark:bg-neutral-800 dark:text-neutral-400";
-};
-
-
-export default function LogisticsPage() {
-    const [filter, setFilter] = useState("Todos");
-    // TODO: fetch from GET api/shipments
-    const shippings: any[] = [];
-
-    const filtered = filter === "Todos" ? shippings : shippings.filter((s) => s.estado === filter);
-
-    return (
-        <main className="p-8 bg-neutral-50 dark:bg-neutral-950 min-h-screen">
-            <div className="mb-8">
-                <h1 className="text-2xl font-light tracking-[0.05em] text-neutral-900 dark:text-neutral-100">
-                    Logistica
-                </h1>
-                <div className="h-px w-8 bg-violet-500 mt-2" />
-            </div>
-
-            <div className="flex gap-2 mb-6">
-                {STATES.map((e) => (
-                    <button
-                        key={e}
-                        onClick={() => setFilter(e)}
-                        className={`px-3 py-1.5 text-xs font-mono rounded-md border transition-colors ${filter === e
-                                ? "bg-violet-600 border-violet-600 text-white dark:bg-violet-500 dark:border-violet-500"
-                                : "bg-white dark:bg-neutral-900 border-neutral-200 dark:border-neutral-800 text-neutral-500 dark:text-neutral-400 hover:border-violet-400"
-                            }`}
-                    >
-                        {e}
-                    </button>
-                ))}
-            </div>
-
-            <div className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-lg overflow-hidden">
-                <table className="w-full text-sm">
-                    <thead>
-                        <tr className="border-b border-neutral-200 dark:border-neutral-800">
-                            {["ID", "Pedido", "Dirección", "Estado", "Fecha entrega", "Monto"].map((h) => (
-                                <th key={h} className="text-left px-4 py-3 text-xs font-mono tracking-[0.1em] uppercase text-neutral-400 dark:text-neutral-500">
-                                    {h}
-                                </th>
-                            ))}
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {filtered.length === 0 ? (
-                            <tr>
-                                <td colSpan={6} className="px-4 py-8 text-center text-sm text-neutral-400 dark:text-neutral-600 font-mono">
-                                    Sin datos
-                                </td>
-                            </tr>
-                        ) : (
-                            filtered.map((s) => (
-                                <tr key={s.id} className="border-b border-neutral-100 dark:border-neutral-800/50 hover:bg-neutral-50 dark:hover:bg-neutral-800/30 transition-colors">
-                                    <td className="px-4 py-3 font-mono text-xs text-neutral-500">{s.id}</td>
-                                    <td className="px-4 py-3 font-mono text-xs text-neutral-500">{s.pedido_id}</td>
-                                    <td className="px-4 py-3 text-neutral-700 dark:text-neutral-300">{s.direccion}</td>
-                                    <td className="px-4 py-3">
-                                        <span className={`px-2 py-0.5 rounded text-xs font-mono ${stateBadge(s.estado)}`}>{s.estado}</span>
-                                    </td>
-                                    <td className="px-4 py-3 text-neutral-500 dark:text-neutral-400">{s.fecha_de_entrega}</td>
-                                    <td className="px-4 py-3 text-neutral-700 dark:text-neutral-300">${s.monto}</td>
-                                </tr>
-                            ))
-                        )}
-                    </tbody>
-                </table>
-            </div>
-        </main>
-    );
+export default async function Page() {
+    const shipments = await fetchShipments();
+    return <LogisticsView shipments={shipments} />;
 }

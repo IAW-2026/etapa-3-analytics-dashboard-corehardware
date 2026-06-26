@@ -24,3 +24,14 @@ export type Sale = {
     sellerId: string;
     totalPrice: number;
 };
+
+export type Shipment = {
+    id: string;
+    pedido_id: string;
+    estado: "PENDIENTE" | "ASIGNADO" | "RETIRADO" | "EN_CAMINO" | "ENTREGADO";
+    direccion: string;
+    monto: number;
+    fecha_estimada: string | null;
+    fecha_de_entrega: string | null;
+    operador: { id: string; nombre: string; mail: string } | null;
+};
