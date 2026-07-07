@@ -1,0 +1,75 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum SourceApp {
+  BUYER
+  SELLER
+  SHIPPING
+  PAYMENTS
+}
+
+enum SyncStatus {
+  OK
+  DEGRADED
+  ERROR
+}
+
+// Un registro por app, se sobreescribe/actualiza en cada sync.
+// Guarda el estado de salud + metadata de la última sincronización.
+model ApiSyncStatus {
+  id           String     @id @default(cuid())
+  app          SourceApp  @unique
+  status       SyncStatus
+  lastSyncedAt DateTime   @updatedAt
+  message      String?
+
+  @@map("api_sync_status")
+}
+
+// KPIs agregados del dashboard, uno por día (alimenta KpiStrip y TrendChart)
+model DashboardSnapshot {
+  id              String   @id @default(cuid())
+  date            DateTime @db.Date
+  gmv             Decimal  @db.Decimal(14, 2)
+  orders          Int
+  pendingShipping Int
+  settled         Decimal  @db.Decimal(14, 2)
+  activeUsers     Int
+  createdAt       DateTime @default(now())
+
+  @@unique([date])
+  @@map("dashboard_snapshots")
+}
+
+// Distribución de pedidos por estado (alimenta OrderStatusDonut)
+model OrderStatusSnapshot {
+  id     String   @id @default(cuid())
+  date   DateTime @db.Date
+  status String
+  count  Int
+
+  @@unique([date, status])
+  @@map("order_status_snapshots")
+}
+
+// Resumen por app (alimenta AppSummaryTable)
+model AppSummarySnapshot {
+  id     String    @id @default(cuid())
+  app    SourceApp
+  date   DateTime  @db.Date
+  metric String
+  value  Decimal   @db.Decimal(14, 2)
+
+  @@unique([app, date, metric])
+  @@map("app_summary_snapshots")
+}

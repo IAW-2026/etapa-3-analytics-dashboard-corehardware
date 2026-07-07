@@ -1,87 +1,65 @@
-import { TrendingUp, ShoppingCart, Truck, AlertTriangle } from "lucide-react";
-import type { Dispute } from "@/types/types";
+import { KpiStrip } from "@/components/dashboard/KpiStrip";
+import { TrendChart } from "@/components/dashboard/TrendChart";
+import { OrderStatusDonut } from "@/components/dashboard/OrderStatusDonut";
+import { ApiHealthPanel } from "@/components/dashboard/ApiHealthPanel";
+import { AppSummaryTable } from "@/components/dashboard/AppSummaryTable";
+import {
+  getApiSyncStatuses,
+  getLatestAppSummarySnapshots,
+  getLatestDashboardSnapshot,
+  getLatestOrderStatusSnapshots,
+  getPreviousDashboardSnapshot,
+  getTrendSnapshots,
+} from "@/lib/dashboard/queries";
+import {
+  buildApiHealth,
+  buildAppSummary,
+  buildKpis,
+  buildOrderStatusDistribution,
+  buildTrendPoints,
+} from "@/lib/dashboard/view-model";
 
-const KPI_CARDS = [
-    { label: "Pedidos totales", key: "orders", icon: ShoppingCart },
-    { label: "Monto procesado", key: "amount", icon: TrendingUp },
-    { label: "Envíos pendientes", key: "shippings", icon: Truck },
-    { label: "Disputas abiertas", key: "disputes", icon: AlertTriangle },
-];
+// Sin esto, Next.js puede cachear esta página como estática en build time
+// (Full Route Cache) y el dashboard quedaría mostrando datos congelados de
+// build, no del sync real — el mismo tipo de problema de fetch/caching que
+// ya te dio dolores de cabeza en Vercel.
+export const dynamic = "force-dynamic";
 
-async function fetchDisputasAbiertas(): Promise<number | null> {
-    try {
-        const res = await fetch(`${process.env.PAYMENTS_APP_URL}/api/disputes?status=open`, {
-            headers: { "x-api-key": process.env.PAYMENTS_API_KEY! },
-            next: { revalidate: 60 },
-        });
-        if (!res.ok) return null;
-        const data: Dispute[] = await res.json();
-        return data.length;
-    } catch {
-        return null;
-    }
-}
+const TREND_DAYS = 30;
 
-async function fetchEnviosPendientes(): Promise<number | null> {
-    try {
-        const res = await fetch(`${process.env.SHIPPING_APP_URL}/api/analytics/stats/resumen`, {
-            headers: { "X-API-Key": process.env.SHIPPING_API_KEY! },
-            next: { revalidate: 60 },
-        });
-        if (!res.ok) return null;
-        const data = await res.json();
-        // No entregados aún (pendientes de asignar + en curso de reparto).
-        return data.envios.pendientes + data.envios.en_curso;
-    } catch {
-        return null;
-    }
-}
+export default async function DashboardHomePage() {
+  const t0 = performance.now();
+  const latestSnapshot = await getLatestDashboardSnapshot();
+  const t1 = performance.now();
+  console.log(`[timing] latestSnapshot: ${(t1 - t0).toFixed(1)}ms`);
 
-export default async function DashboardPage() {
-    const [disputasAbiertas, enviosPendientes] = await Promise.all([
-        fetchDisputasAbiertas(),
-        fetchEnviosPendientes(),
+  const [previousSnapshot, trendSnapshots, orderStatusRows, syncStatuses, appSummaryRows] =
+    await Promise.all([
+      latestSnapshot ? getPreviousDashboardSnapshot(latestSnapshot.date) : Promise.resolve(null),
+      getTrendSnapshots(TREND_DAYS),
+      getLatestOrderStatusSnapshots(),
+      getApiSyncStatuses(),
+      getLatestAppSummarySnapshots(),
     ]);
+  const t2 = performance.now();
+  console.log(`[timing] parallelQueries: ${(t2 - t1).toFixed(1)}ms`);
+  console.log(`[timing] TOTAL handler: ${(t2 - t0).toFixed(1)}ms`);
 
-    const kpis = {
-        orders: "—",
-        amount: "—",
-        shippings: enviosPendientes === null ? "Error" : String(enviosPendientes),
-        disputes: disputasAbiertas === null ? "Error" : String(disputasAbiertas),
-    };
+  const kpis = buildKpis(latestSnapshot, previousSnapshot);
+  const trendData = buildTrendPoints(trendSnapshots);
+  const orderStatusDistribution = buildOrderStatusDistribution(orderStatusRows);
+  const apiHealth = buildApiHealth(syncStatuses);
+  const appSummary = buildAppSummary(syncStatuses, appSummaryRows);
 
-    return (
-        <main className="p-8 bg-neutral-50 dark:bg-neutral-950 min-h-screen">
-            <div className="mb-8">
-                <h1 className="text-2xl font-light tracking-[0.05em] text-neutral-900 dark:text-neutral-100">
-                    Dashboard
-                </h1>
-                <div className="h-px w-8 bg-violet-500 mt-2" />
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                {KPI_CARDS.map(({ label, key, icon: Icon }) => (
-                    <div
-                        key={key}
-                        className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-lg p-5 flex flex-col gap-3"
-                    >
-                        <div className="flex items-center justify-between">
-                            <span className="text-xs font-mono tracking-[0.1em] uppercase text-neutral-400 dark:text-neutral-500">
-                                {label}
-                            </span>
-                            <Icon className="w-4 h-4 text-neutral-300 dark:text-neutral-600" />
-                        </div>
-                        <span className={`text-3xl font-light tracking-tight ${
-                            (key === "disputes" && disputasAbiertas === null) ||
-                            (key === "shippings" && enviosPendientes === null)
-                                ? "text-red-400"
-                                : "text-neutral-900 dark:text-neutral-100"
-                        }`}>
-                            {kpis[key as keyof typeof kpis]}
-                        </span>
-                    </div>
-                ))}
-            </div>
-        </main>
-    );
+  return (
+    <div className="flex flex-col gap-6 p-6">
+      <KpiStrip kpis={kpis} />
+      <TrendChart data={trendData} />
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+        <OrderStatusDonut data={orderStatusDistribution} />
+        <ApiHealthPanel data={apiHealth} />
+      </div>
+      <AppSummaryTable data={appSummary} />
+    </div>
+  );
 }

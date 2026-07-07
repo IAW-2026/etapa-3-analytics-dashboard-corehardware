@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import type { Sale } from "@/types/types";
+import type { Sale, Order } from "@/types/types";
 
 const TABS = ["Pedidos", "Ventas"];
 
@@ -20,11 +20,11 @@ const stateBadge = (state: string) => {
 
 type Props = {
     sales: Sale[] | null;
+    orders: Order[] | null;
 };
 
-export default function SalesView({ sales }: Props) {
+export default function SalesView({ sales, orders }: Props) {
     const [tab, setTab] = useState("Pedidos");
-    const pedidos: any[] = [];
 
     return (
         <main className="p-8 bg-neutral-50 dark:bg-neutral-950 min-h-screen">
@@ -61,9 +61,11 @@ export default function SalesView({ sales }: Props) {
                             </tr>
                         </thead>
                         <tbody>
-                            {pedidos.length === 0 ? (
+                            {orders === null ? (
+                                <tr><td colSpan={6} className="px-4 py-8 text-center text-sm text-red-400 font-mono">Error al cargar los pedidos</td></tr>
+                            ) : orders.length === 0 ? (
                                 <tr><td colSpan={6} className="px-4 py-8 text-center text-sm text-neutral-400 dark:text-neutral-600 font-mono">Sin datos</td></tr>
-                            ) : pedidos.map((p) => (
+                            ) : orders.map((p) => (
                                 <tr key={p.id} className="border-b border-neutral-100 dark:border-neutral-800/50 hover:bg-neutral-50 dark:hover:bg-neutral-800/30 transition-colors">
                                     <td className="px-4 py-3 font-mono text-xs text-neutral-500">{p.id}</td>
                                     <td className="px-4 py-3 text-neutral-500 dark:text-neutral-400">{p.fecha}</td>
