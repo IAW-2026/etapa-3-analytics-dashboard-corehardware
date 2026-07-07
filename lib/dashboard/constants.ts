@@ -1,6 +1,7 @@
 import type { SourceApp, SyncStatus } from "@prisma/client";
 import type { Tone } from "@/styles/theme";
 import type { ApiHealthStatus } from "./types";
+import { chartCategoryColors } from "@/styles/theme";
 
 export const CHANGE_PCT_COMPARISON_DAYS = 7;
 
@@ -53,3 +54,33 @@ export const ORDER_STATUS_TONE: Record<string, Tone> = {
   ENTREGADO: "success",
   CANCELADO: "danger",
 };
+
+// El campo `estado` de Pedido mezcla dos fases del ciclo de vida de una
+// orden (pago y cumplimiento/envío) — ver PAYMENT_STATUSES /
+// FULFILLMENT_STATUSES más abajo. Acá se le asigna a cada estado un color
+// único dentro de su propio donut, tomado de chartCategoryColors
+// (styles/theme.ts) para no duplicar hex ni desviarse de la paleta de marca.
+export const ORDER_STATUS_CHART_COLOR: Record<string, string> = {
+  // Fulfillment
+  EN_PREPARACION: chartCategoryColors.amber,
+  EN_CAMINO: chartCategoryColors.violet,
+  ENTREGADO: chartCategoryColors.emerald,
+  CANCELADO: chartCategoryColors.rose,
+  // Payment
+  PENDIENTE_PAGO: chartCategoryColors.zinc,
+  PAGO_APROBADO: chartCategoryColors.emerald,
+  PAGO_RECHAZADO: chartCategoryColors.rose,
+};
+
+export const PAYMENT_STATUSES = [
+  "PENDIENTE_PAGO",
+  "PAGO_APROBADO",
+  "PAGO_RECHAZADO",
+] as const;
+
+export const FULFILLMENT_STATUSES = [
+  "EN_PREPARACION",
+  "EN_CAMINO",
+  "ENTREGADO",
+  "CANCELADO",
+] as const;

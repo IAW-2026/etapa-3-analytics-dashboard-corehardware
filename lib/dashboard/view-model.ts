@@ -3,8 +3,10 @@ import {
   APP_DISPLAY_NAME,
   APP_HREF,
   APP_KEY_METRIC,
+  FULFILLMENT_STATUSES,
   ORDER_STATUS_LABEL,
   ORDER_STATUS_TONE,
+  PAYMENT_STATUSES,
   SYNC_STATUS_TO_HEALTH,
 } from "./constants";
 import type {
@@ -12,14 +14,14 @@ import type {
   AppSummarySnapshot,
   DashboardSnapshot,
   OrderStatusSnapshot,
-  SourceApp,
 } from "@prisma/client";
 import type {
   ApiHealthRow,
   AppSummaryRow,
   DashboardKpis,
+  FulfillmentStatusDistribution,
   KpiValue,
-  OrderStatusDistribution,
+  PaymentStatusDistribution,
   TrendPoint,
 } from "./types";
 
@@ -71,14 +73,35 @@ export function buildTrendPoints(snapshots: DashboardSnapshot[]): TrendPoint[] {
   }));
 }
 
-export function buildOrderStatusDistribution(rows: OrderStatusSnapshot[]): OrderStatusDistribution {
+// El campo `estado` de Pedido mezcla dos fases del ciclo de vida de una
+// orden (pago y cumplimiento/envío). Esta función filtra OrderStatusSnapshot
+// a un subconjunto de estados y lo mapea al shape del donut — reutilizada
+// por las dos funciones públicas de abajo para no duplicar el mapeo
+// (label, tone, color) en dos lugares.
+function buildStatusDistribution(
+  rows: OrderStatusSnapshot[],
+  allowedStatuses: readonly string[],
+) {
   return rows
-    .filter((row) => row.count > 0)
+    .filter((row) => allowedStatuses.includes(row.status) && row.count > 0)
     .map((row) => ({
       status: ORDER_STATUS_LABEL[row.status] ?? row.status,
+      statusKey: row.status,
       value: row.count,
       tone: ORDER_STATUS_TONE[row.status] ?? "neutral",
     }));
+}
+
+export function buildFulfillmentStatusDistribution(
+  rows: OrderStatusSnapshot[],
+): FulfillmentStatusDistribution {
+  return buildStatusDistribution(rows, FULFILLMENT_STATUSES);
+}
+
+export function buildPaymentStatusDistribution(
+  rows: OrderStatusSnapshot[],
+): PaymentStatusDistribution {
+  return buildStatusDistribution(rows, PAYMENT_STATUSES);
 }
 
 function secondsSince(date: Date): number {

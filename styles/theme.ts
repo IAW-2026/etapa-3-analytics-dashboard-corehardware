@@ -44,3 +44,17 @@ export const chartColors = {
 export const cardClass = "rounded-lg border border-zinc-800 bg-zinc-900 p-4";
 export const cardLabelClass =
   "font-mono text-xs uppercase tracking-wider text-zinc-400";
+
+// Paleta para gráficos con múltiples categorías en un mismo chart (ej. donut
+// de distribución), donde cada slice necesita un color propio y distinguible
+// entre sí — a diferencia de toneHexColors, que asigna un color por
+// significado semántico (puede repetirse entre estados sin relación visual).
+// Reutiliza los mismos hex ya aprobados como "Deep Terminal": nada nuevo,
+// solo se exponen con nombres pensados para uso categórico.
+export const chartCategoryColors = {
+  emerald: toneHexColors.success,
+  rose: toneHexColors.danger,
+  amber: toneHexColors.warning,
+  violet: chartColors.primary,
+  zinc: toneHexColors.neutral,
+} as const;
