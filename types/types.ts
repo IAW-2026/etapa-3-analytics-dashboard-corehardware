@@ -35,3 +35,42 @@ export type Shipment = {
     fecha_de_entrega: string | null;
     operador: { id: string; nombre: string; mail: string } | null;
 };
+
+export type Buyer = {
+    id: string;
+    dni: string;
+    cuil_cuit: string;
+    apellido: string;
+    nombre: string;
+    direccion: string;
+    mail: string;
+    celular: string;
+    condicion_iva: string;
+};
+
+export type Seller = {
+    id: string;
+    razon_social: string;
+    cuit: string;
+    mail: string;
+    celular: string;
+    condicion_iva: string;
+};
+
+export type Operator = {
+    id: string;
+    nombre: string;
+    apellido: string;
+    dni: string;
+    mail: string;
+    celular: string;
+};
+
+export type Order = {
+    id: string;
+    fecha: string;
+    comprador_id: string;
+    vendedor_id: string;
+    monto: number;
+    estado: string;
+};

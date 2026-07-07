@@ -1,4 +1,4 @@
-import { clerkClient, clerkMiddleware, createRouteMatcher } from '@clerk/nextjs/server';
+import { clerkMiddleware, createRouteMatcher } from '@clerk/nextjs/server';
 import { NextResponse } from "next/server";
 
 
@@ -21,31 +21,12 @@ function canAccess(role: string): boolean {
 }
 
 
-async function getUserRole(userId: string): Promise<unknown> {
-    const client = await clerkClient();
-    const user = await client.users.getUser(userId);
-    return user.publicMetadata?.role;
-}
-
-
-async function authorizeUser(userId: string, req: Request): Promise<NextResponse> {
-    const rawRole = await getUserRole(userId);
-
-    if (!isRole(rawRole) || !canAccess(rawRole)) {
-        return NextResponse.redirect(new URL("/unauthorized", req.url));
-    }
-
-    return NextResponse.next();
-}
-
-
 export default clerkMiddleware(async (auth, req) => {
-    const { userId } = await auth();
+    const { userId, sessionClaims } = await auth();
+    const rawRole = sessionClaims?.metadata?.role;
 
     if (req.nextUrl.pathname === "/unauthorized") {
         if (!userId) return NextResponse.redirect(new URL("/", req.url));
-
-        const rawRole = await getUserRole(userId);
 
         if (isRole(rawRole) && canAccess(rawRole)) {
             return NextResponse.redirect(new URL("/dashboard", req.url));
@@ -61,12 +42,14 @@ export default clerkMiddleware(async (auth, req) => {
             return NextResponse.redirect(signInUrl);
         }
 
-        return authorizeUser(userId, req);
+        if (!isRole(rawRole) || !canAccess(rawRole)) {
+            return NextResponse.redirect(new URL("/unauthorized", req.url));
+        }
+
+        return NextResponse.next();
     }
 
     if (userId) {
-        const rawRole = await getUserRole(userId);
-
         if (isRole(rawRole) && canAccess(rawRole)) {
             return NextResponse.redirect(new URL("/dashboard", req.url));
         }
