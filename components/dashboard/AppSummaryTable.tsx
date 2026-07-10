@@ -2,6 +2,7 @@ import Link from "next/link";
 import type { AppSummaryRow } from "@/lib/dashboard/types";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { cardClass, cardLabelClass, statusToTone, statusToLabel } from "@/styles/theme";
+import { formatRelativeTime } from "@/lib/utils/time";
 
 export function AppSummaryTable({ data }: { data: AppSummaryRow[] }) {
   return (
@@ -30,7 +31,7 @@ export function AppSummaryTable({ data }: { data: AppSummaryRow[] }) {
               <td className="py-3">
                 <StatusBadge label={statusToLabel[row.status]} tone={statusToTone[row.status]} />
               </td>
-              <td className="py-3 font-mono text-sm text-zinc-500">hace {row.lastSyncSecondsAgo}s</td>
+              <td className="py-3 font-mono text-sm text-zinc-500">{formatRelativeTime(row.lastSyncSecondsAgo)}</td>
             </tr>
           ))}
         </tbody>

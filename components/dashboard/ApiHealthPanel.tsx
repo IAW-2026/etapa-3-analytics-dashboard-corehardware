@@ -1,6 +1,7 @@
 import type { ApiHealthRow } from "@/lib/dashboard/types";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { cardClass, cardLabelClass, statusToTone, statusToLabel } from "@/styles/theme";
+import { formatRelativeTime } from "@/lib/utils/time";
 
 export function ApiHealthPanel({ data }: { data: ApiHealthRow[] }) {
   return (
@@ -15,7 +16,7 @@ export function ApiHealthPanel({ data }: { data: ApiHealthRow[] }) {
             </div>
             <div className="flex items-center justify-between font-mono text-xs text-zinc-500">
               <span>{api.message ?? "—"}</span>
-              <span>hace {api.lastSyncSecondsAgo}s</span>
+              <span>{formatRelativeTime(api.lastSyncSecondsAgo)}</span>
             </div>
           </div>
         ))}
