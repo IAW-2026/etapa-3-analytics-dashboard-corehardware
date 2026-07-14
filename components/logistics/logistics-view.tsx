@@ -3,6 +3,7 @@ import LogisticsTable from "@/components/logistics/logistics-table";
 import LogisticsKpiStrip from "@/components/logistics/logistics-kpi-strip";
 import LogisticsAtRiskAlert from "@/components/logistics/logistics-at-risk-alert";
 import LogisticsDateRangeFilter from "@/components/logistics/logistics-date-range-filter";
+import LogisticsMap from "@/components/logistics/logistics-map";
 import type { Shipment, LogisticaKpis } from "@/types/types";
 
 type Props = {
@@ -25,6 +26,7 @@ export default function LogisticsView({ shipments, kpis, rango }: Props) {
             <LogisticsKpiStrip kpis={kpis} />
             <LogisticsAtRiskAlert cantidad={kpis?.en_riesgo ?? null} />
             <LogisticsCharts shipments={shipments} />
+            <LogisticsMap shipments={shipments} />
             <LogisticsTable shipments={shipments} />
         </main>
     );
