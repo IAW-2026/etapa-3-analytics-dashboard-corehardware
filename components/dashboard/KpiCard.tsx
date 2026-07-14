@@ -8,20 +8,28 @@ type KpiCardProps = {
   label: string;
   value: number;
   changePct?: number;
+  // Opcional con default true: los usos de KpiCard fuera de orders-summary
+  // (si los hay) siguen funcionando igual sin tener que pasar esta prop.
+  hasPreviousData?: boolean;
   icon: LucideIcon;
   prefix?: string;
   suffix?: string;
   decimals?: number;
+  actionLabel?: string;
+  onAction?: () => void;
 };
 
 export function KpiCard({
   label,
   value,
   changePct,
+  hasPreviousData = true,
   icon: Icon,
   prefix = "",
   suffix = "",
   decimals = 0,
+  actionLabel,
+  onAction,
 }: KpiCardProps) {
   const isPositive = (changePct ?? 0) >= 0;
 
@@ -44,7 +52,7 @@ export function KpiCard({
         />
       </div>
 
-      {changePct !== undefined && (
+      {changePct !== undefined ? (
         <div
           className={`flex items-center gap-1 text-xs font-mono ${
             isPositive ? "text-emerald-400" : "text-rose-400"
@@ -57,6 +65,19 @@ export function KpiCard({
           )}
           <span>{Math.abs(changePct).toFixed(1)}% vs período anterior</span>
         </div>
+      ) : !hasPreviousData ? (
+        <div className="flex items-center gap-1 text-xs font-mono text-zinc-500">
+          <span>Sin datos del período anterior</span>
+        </div>
+      ) : null}
+
+      {onAction && actionLabel && (
+        <button
+          onClick={onAction}
+          className="self-start font-mono text-xs text-violet-400 hover:text-violet-300"
+        >
+          {actionLabel} →
+        </button>
       )}
     </div>
   );

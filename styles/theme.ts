@@ -57,4 +57,6 @@ export const chartCategoryColors = {
   amber: toneHexColors.warning,
   violet: chartColors.primary,
   zinc: toneHexColors.neutral,
+  cyan: "#22d3ee",
+  orange: "#f97316",
 } as const;
