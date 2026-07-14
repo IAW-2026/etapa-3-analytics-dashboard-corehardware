@@ -1,8 +1,7 @@
-import { KpiStrip } from "@/components/dashboard/KpiStrip";
 import { TrendChart } from "@/components/dashboard/TrendChart";
-import { OrderStatusDonut } from "@/components/dashboard/OrderStatusDonut";
 import { ApiHealthPanel } from "@/components/dashboard/ApiHealthPanel";
 import { AppSummaryTable } from "@/components/dashboard/AppSummaryTable";
+import { OrdersDrillDownController } from "@/components/dashboard/OrdersDrillDownController";
 import {
   getApiSyncStatuses,
   getLatestAppSummarySnapshots,
@@ -38,7 +37,6 @@ export default async function DashboardHomePage() {
 
   const kpis = buildKpis(latestSnapshot, previousSnapshot);
   const trendData = buildTrendPoints(trendSnapshots);
-  // Misma fuente (orderStatusRows) split en dos vistas — no hay query extra.
   const fulfillmentDistribution = buildFulfillmentStatusDistribution(orderStatusRows);
   const paymentDistribution = buildPaymentStatusDistribution(orderStatusRows);
   const apiHealth = buildApiHealth(syncStatuses);
@@ -46,13 +44,12 @@ export default async function DashboardHomePage() {
 
   return (
     <div className="flex flex-col gap-6 p-6">
-      <KpiStrip kpis={kpis} />
+      <OrdersDrillDownController
+        kpis={kpis}
+        fulfillmentDistribution={fulfillmentDistribution}
+        paymentDistribution={paymentDistribution}
+      />
       <TrendChart data={trendData} />
-
-      <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
-        <OrderStatusDonut title="Estado del pedido" data={fulfillmentDistribution} />
-        <OrderStatusDonut title="Estado del pago" data={paymentDistribution} />
-      </div>
 
       <ApiHealthPanel data={apiHealth} />
       <AppSummaryTable data={appSummary} />

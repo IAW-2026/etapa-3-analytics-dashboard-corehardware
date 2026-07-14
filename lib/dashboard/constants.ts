@@ -57,15 +57,17 @@ export const ORDER_STATUS_TONE: Record<string, Tone> = {
 
 // El campo `estado` de Pedido mezcla dos fases del ciclo de vida de una
 // orden (pago y cumplimiento/envío) — ver PAYMENT_STATUSES /
-// FULFILLMENT_STATUSES más abajo. Acá se le asigna a cada estado un color
-// único dentro de su propio donut, tomado de chartCategoryColors
 // (styles/theme.ts) para no duplicar hex ni desviarse de la paleta de marca.
+
+// Cada uno de los 7 estados tiene un color único, sin repetir entre
+// Fulfillment y Payment, para evitar que dos estados de gráficos distintos
+// se confundan si algún día se muestran lado a lado o combinados.
 export const ORDER_STATUS_CHART_COLOR: Record<string, string> = {
   // Fulfillment
   EN_PREPARACION: chartCategoryColors.amber,
   EN_CAMINO: chartCategoryColors.violet,
-  ENTREGADO: chartCategoryColors.emerald,
-  CANCELADO: chartCategoryColors.rose,
+  ENTREGADO: chartCategoryColors.cyan,
+  CANCELADO: chartCategoryColors.orange,
   // Payment
   PENDIENTE_PAGO: chartCategoryColors.zinc,
   PAGO_APROBADO: chartCategoryColors.emerald,
@@ -84,3 +86,26 @@ export const FULFILLMENT_STATUSES = [
   "ENTREGADO",
   "CANCELADO",
 ] as const;
+
+// Subconjunto de FULFILLMENT_STATUSES considerado "pendiente" para el KPI
+// pendingShipments (excluye ENTREGADO y CANCELADO, que son estados finales).
+export const PENDING_SHIPMENT_STATUSES = [
+  "EN_PREPARACION",
+  "EN_CAMINO",
+] as const;
+
+// Mismo orden de flujo de negocio que ESTADO_SORT_ORDER en Buyer
+// (src/app/api/dashboard-analytics/orders/route.ts). Los repos están
+// completamente separados sin imports compartidos, así que este array se
+// duplica intencionalmente — si se cambia acá hay que replicarlo también
+// del lado de Buyer. Se mantiene por documentación/consistencia de criterio,
+// el ordenamiento real lo resuelve la query de Buyer, no este array.
+export const ORDER_STATUS_SORT_ORDER: readonly string[] = [
+  'PENDIENTE_PAGO',
+  'PAGO_APROBADO',
+  'EN_PREPARACION',
+  'EN_CAMINO',
+  'ENTREGADO',
+  'PAGO_RECHAZADO',
+  'CANCELADO',
+];

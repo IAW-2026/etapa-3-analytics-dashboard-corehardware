@@ -1,4 +1,5 @@
 import type { Tone } from "@/styles/theme";
+import type { Order } from "@/types/types";
 
 export type KpiValue = {
   value: number;
@@ -50,4 +51,16 @@ export type AppSummaryRow = {
   status: ApiHealthStatus;
   lastSyncSecondsAgo: number;
   href: string;
+};
+
+export type OrdersQueryResponse = {
+  items: Order[];
+  total: number;
+  limit: number;
+  offset: number;
+};
+
+export type DrillDownFilter = {
+  estados: string[];
+  label: string;
 };
