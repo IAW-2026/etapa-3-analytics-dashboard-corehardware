@@ -19,4 +19,6 @@ export const ESTADOS_ENVIO_PENDIENTES: EnvioEstado[] = [
 
 export const ESTADOS_PEDIDO_EXCLUIDOS_DE_GMV: PedidoEstado[] = ["CANCELADO", "PAGO_RECHAZADO"];
 
+export const ESTADOS_PEDIDO_EXCLUIDOS_DE_VENTAS: PedidoEstado[] = ["CANCELADO", "PAGO_RECHAZADO"];
+
 export const ESTADO_PAGO_ACREDITADO = "acreditado";

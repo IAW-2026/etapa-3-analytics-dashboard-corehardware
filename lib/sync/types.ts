@@ -13,7 +13,17 @@ export type Pedido = {
   comprador_id: string;
   vendedor_id: string;
   monto: number;
+  subtotal_productos: number | null;
+  costo_envio: number | null;
   estado: PedidoEstado;
+  productos_id?: string[];
+};
+
+export type PedidosPageResponse = {
+  items: Pedido[];
+  total: number;
+  limit: number;
+  offset: number;
 };
 
 export type Comprador = {
@@ -26,6 +36,7 @@ export type Comprador = {
   mail: string;
   celular: string;
   condicion_iva: string;
+  fecha_alta: string;
 };
 
 export type ForeignSale = {
@@ -80,4 +91,25 @@ export type Disputa = {
   fechaDeFinalizacion: string | null;
   estado: string;
   descripcion: string;
+};
+
+export type Producto = {
+  id: string;
+  nombre: string;
+  vendedor_id: string;
+};
+
+export type ProductosResponse = {
+  total: number;
+  items: Producto[];
+};
+
+export type Vendedor = {
+  id: string;
+  razon_social: string;
+};
+
+export type VendedoresResponse = {
+  total: number;
+  items: Vendedor[];
 };

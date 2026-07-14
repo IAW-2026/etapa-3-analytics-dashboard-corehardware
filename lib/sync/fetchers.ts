@@ -1,4 +1,16 @@
-import type { Comprador, Pedido, ForeignSale, EnviosResponse, Pago, Disputa } from "./types";
+import type {
+  Comprador,
+  Pedido,
+  PedidosPageResponse,
+  ForeignSale,
+  EnviosResponse,
+  Pago,
+  Disputa,
+  Producto,
+  ProductosResponse,
+  Vendedor,
+  VendedoresResponse,
+} from "./types";
 
 async function fetchJson<T>(url: string, apiKey: string | undefined): Promise<T> {
   if (!apiKey) {
@@ -18,8 +30,10 @@ export function fetchCompradores() {
   return fetchJson<Comprador[]>(`${process.env.BUYER_APP_URL}/api/buyers`, process.env.BUYER_API_KEY);
 }
 
+// No reemplaza a fetchPedidos(): esa sigue alimentando la tabla en vivo vía
+// /api/dashboard-analytics/orders/all. Esta recorre /api/dashboard-analytics/orders (que pagina,
 export function fetchPedidos() {
-  return fetchJson<Pedido[]>(`${process.env.BUYER_APP_URL}/api/orders/all`, process.env.BUYER_API_KEY);
+  return fetchJson<Pedido[]>(`${process.env.BUYER_APP_URL}/api/dashboard-analytics/orders/all`, process.env.BUYER_API_KEY);
 }
 
 export function fetchVentas() {
@@ -36,6 +50,55 @@ export function fetchPagos() {
 
 export function fetchDisputas() {
   return fetchJson<Disputa[]>(`${process.env.PAYMENTS_APP_URL}/api/disputes`, process.env.PAYMENTS_API_KEY);
+}
+
+export async function fetchProductos(): Promise<Producto[]> {
+  const res = await fetchJson<ProductosResponse>(
+    `${process.env.SELLER_APP_URL}/api/analytics/products`,
+    process.env.SELLER_API_KEY
+  );
+  return res.items;
+}
+
+export async function fetchVendedores(): Promise<Vendedor[]> {
+  const res = await fetchJson<VendedoresResponse>(
+    `${process.env.SELLER_APP_URL}/api/analytics/sellers`,
+    process.env.SELLER_API_KEY
+  );
+  return res.items;
+}
+
+// ── Fetch paginado de pedidos por rango de fechas ──────────────────────────
+// No reemplaza a fetchPedidos(): esa sigue alimentando la tabla en vivo vía
+// /api/orders/all. Esta recorre /api/dashboard-analytics/orders (que pagina,
+// máx 100 por página) hasta juntar el total del rango solicitado.
+export async function fetchPedidosEnRango(
+  fechaDesde: string,
+  fechaHasta: string,
+  estados?: string[]
+): Promise<Pedido[]> {
+  const limit = 100;
+  let offset = 0;
+  const pedidos: Pedido[] = [];
+
+  while (true) {
+    const url = new URL(`${process.env.BUYER_APP_URL}/api/dashboard-analytics/orders`);
+    url.searchParams.set("fechaDesde", fechaDesde);
+    url.searchParams.set("fechaHasta", fechaHasta);
+    url.searchParams.set("limit", String(limit));
+    url.searchParams.set("offset", String(offset));
+    if (estados && estados.length > 0) {
+      url.searchParams.set("estado", estados.join(","));
+    }
+
+    const page = await fetchJson<PedidosPageResponse>(url.toString(), process.env.BUYER_API_KEY);
+    pedidos.push(...page.items);
+
+    if (page.items.length < limit || pedidos.length >= page.total) break;
+    offset += limit;
+  }
+
+  return pedidos;
 }
 
 export type SourceFetchResults = {
