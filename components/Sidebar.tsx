@@ -8,6 +8,7 @@ import {
   Truck,
   ShoppingCart,
   Users,
+  ShoppingBag,
 } from "lucide-react";
 
 const navItems = [
@@ -16,6 +17,7 @@ const navItems = [
   { href: "/logistica", label: "Logística", icon: Truck },
   { href: "/ventas", label: "Ventas", icon: ShoppingCart },
   { href: "/usuarios", label: "Usuarios", icon: Users },
+  { href: "/productos", label: "Productos", icon: ShoppingBag },
 ];
 
 export function Sidebar() {
