@@ -25,14 +25,14 @@ export default function LogisticsDateRangeFilter({ valor }: Props) {
     }
 
     return (
-        <div className="flex flex-wrap gap-2 mb-6">
+        <div className="flex flex-wrap gap-2">
             {OPCIONES.map((op) => (
                 <button
                     key={op.value}
                     onClick={() => handleChange(op.value)}
                     className={`px-3 py-1.5 text-xs font-mono rounded-md border transition-colors ${valor === op.value
-                            ? "bg-violet-600 border-violet-600 text-white dark:bg-violet-500 dark:border-violet-500"
-                            : "bg-white dark:bg-neutral-900 border-neutral-200 dark:border-neutral-800 text-neutral-500 dark:text-neutral-400 hover:border-violet-400"
+                            ? "bg-violet-500/20 border-violet-500/40 text-violet-300"
+                            : "bg-zinc-900 border-zinc-800 text-zinc-400 hover:border-violet-500/40 hover:text-zinc-200"
                         }`}
                 >
                     {op.label}

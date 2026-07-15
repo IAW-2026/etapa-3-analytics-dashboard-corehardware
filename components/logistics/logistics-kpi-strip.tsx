@@ -1,4 +1,5 @@
-import { Package, Clock, Truck, Timer, ArrowUpRight, ArrowDownRight } from "lucide-react";
+import { Package, Clock, Truck, Timer, ArrowUpRight, ArrowDownRight, type LucideIcon } from "lucide-react";
+import { cardClass, cardLabelClass } from "@/styles/theme";
 import type { LogisticaKpis } from "@/types/types";
 
 type Props = {
@@ -16,16 +17,14 @@ function KpiTile({
     value,
     delta,
     icon: Icon,
-    suffix = "",
     formatter,
-    // Para envios en riesgo: mas es peor.
+    // Para envios en riesgo o tiempos: mas es peor.
     invertidoParaBueno = false,
 }: {
     label: string;
     value: number | null;
     delta: number | null;
-    icon: React.ComponentType<{ className?: string }>;
-    suffix?: string;
+    icon: LucideIcon;
     formatter?: (n: number) => string;
     invertidoParaBueno?: boolean;
 }) {
@@ -37,22 +36,22 @@ function KpiTile({
             ? "—"
             : formatter
                 ? formatter(value)
-                : `${value.toLocaleString("es-AR")}${suffix}`;
+                : value.toLocaleString("es-AR");
 
     return (
-        <div className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-lg p-5 flex flex-col gap-3">
+        <div className={`flex flex-col gap-3 ${cardClass}`}>
             <div className="flex items-center justify-between">
-                <span className="text-xs font-mono tracking-[0.1em] uppercase text-neutral-400 dark:text-neutral-500">
-                    {label}
-                </span>
-                <Icon className="w-4 h-4 text-neutral-300 dark:text-neutral-600" />
+                <span className={cardLabelClass}>{label}</span>
+                <Icon className="h-4 w-4 text-zinc-500" strokeWidth={1.75} />
             </div>
-            <span className="text-3xl font-light tracking-tight text-neutral-900 dark:text-neutral-100 font-mono">
+
+            <div className="font-mono text-2xl font-semibold text-zinc-50">
                 {displayValue}
-            </span>
+            </div>
+
             {mostrarDelta ? (
                 <div
-                    className={`flex items-center gap-1 text-xs font-mono ${esBueno ? "text-emerald-500" : "text-rose-500"
+                    className={`flex items-center gap-1 text-xs font-mono ${esBueno ? "text-emerald-400" : "text-rose-400"
                         }`}
                 >
                     {isPositivo ? (
@@ -72,7 +71,7 @@ function KpiTile({
 export default function LogisticsKpiStrip({ kpis }: Props) {
     if (!kpis) {
         return (
-            <div className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-lg p-5 mb-6">
+            <div className={`${cardClass} mb-4`}>
                 <p className="text-sm text-rose-400 font-mono">
                     Error al cargar las métricas de logística
                 </p>
@@ -88,7 +87,7 @@ export default function LogisticsKpiStrip({ kpis }: Props) {
     );
 
     return (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4 mb-4">
             <KpiTile
                 label="Total de envíos"
                 value={kpis.total_envios.actual}

@@ -16,41 +16,49 @@ type Props = {
 
 function SectionTitle({ title }: { title: string }) {
     return (
-        <div className="mb-3">
-            <h2 className="text-xs font-mono tracking-[0.15em] uppercase text-neutral-500 dark:text-neutral-400">
-                {title}
-            </h2>
-        </div>
+        <h2 className="font-mono text-xs uppercase tracking-wider text-zinc-400 mb-3">
+            {title}
+        </h2>
     );
 }
 
 export default function LogisticsView({ shipments, kpis, rango, buyerUrl }: Props) {
     return (
-        <main className="p-8 bg-neutral-50 dark:bg-neutral-950 min-h-screen">
-            <div className="mb-8 flex items-end justify-between flex-wrap gap-4">
+        <div className="flex flex-col gap-6 p-6">
+            <div className="flex items-end justify-between gap-4 flex-wrap">
                 <div>
-                    <h1 className="text-2xl font-light tracking-[0.05em] text-neutral-900 dark:text-neutral-100">
-                        Logistica
+                    <h1 className="text-2xl font-semibold tracking-tight text-zinc-50">
+                        Logística
                     </h1>
-                    <div className="h-px w-8 bg-violet-500 mt-2" />
+                    <p className="text-sm text-zinc-500 mt-1">
+                        Envíos, operadores y cumplimiento de entregas.
+                    </p>
                 </div>
                 <LogisticsDateRangeFilter valor={rango} />
             </div>
 
-            <SectionTitle title="Resumen" />
-            <LogisticsKpiStrip kpis={kpis} />
-            <LogisticsAtRiskAlert cantidad={kpis?.en_riesgo ?? null} />
+            <section>
+                <SectionTitle title="Resumen" />
+                <LogisticsKpiStrip kpis={kpis} />
+                <LogisticsAtRiskAlert cantidad={kpis?.en_riesgo ?? null} />
+            </section>
 
-            <SectionTitle title="Métricas" />
-            <LogisticsCharts shipments={shipments} />
+            <section>
+                <SectionTitle title="Métricas" />
+                <LogisticsCharts shipments={shipments} />
+            </section>
 
-            <SectionTitle title="Distribución geográfica" />
-            <LogisticsMap shipments={shipments} />
+            <section>
+                <SectionTitle title="Distribución geográfica" />
+                <LogisticsMap shipments={shipments} />
+            </section>
 
-            <SectionTitle title="Envíos" />
-            <LogisticsTable shipments={shipments} />
+            <section>
+                <SectionTitle title="Envíos" />
+                <LogisticsTable shipments={shipments} />
+            </section>
 
             <LogisticsBuyerCTA buyerUrl={buyerUrl} />
-        </main>
+        </div>
     );
 }

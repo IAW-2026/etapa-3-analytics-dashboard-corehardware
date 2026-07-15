@@ -2,18 +2,20 @@
 
 import { useEffect, useState } from "react";
 import dynamic from "next/dynamic";
+import { cardClass, cardLabelClass, chartCategoryColors } from "@/styles/theme";
 import type { Shipment } from "@/types/types";
 import "leaflet/dist/leaflet.css";
 
 type Coord = { lat: number; lon: number };
 type ShipmentConCoord = Shipment & { coord: Coord };
 
+// Mismos colores por estado que los graficos, tomados del theme central.
 const ESTADO_COLOR: Record<string, string> = {
-    PENDIENTE: "#eab308",
-    ASIGNADO: "#22d3ee",
-    RETIRADO: "#fb923c",
-    EN_CAMINO: "#60a5fa",
-    ENTREGADO: "#34d399",
+    PENDIENTE: chartCategoryColors.amber,
+    ASIGNADO: chartCategoryColors.cyan,
+    RETIRADO: chartCategoryColors.orange,
+    EN_CAMINO: chartCategoryColors.violet,
+    ENTREGADO: chartCategoryColors.emerald,
 };
 
 const CACHE_KEY = "logistica_geocache_v1";
@@ -127,13 +129,13 @@ export default function LogisticsMap({ shipments }: Props) {
     if (!shipments || shipments.length === 0) return null;
 
     return (
-        <div className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-lg p-5 mb-6">
+        <div className={cardClass}>
             <div className="flex items-center justify-between mb-4">
-                <h2 className="text-xs font-mono tracking-[0.1em] uppercase text-neutral-400 dark:text-neutral-500">
+                <h2 className={cardLabelClass}>
                     Mapa de envíos (hasta {MAX_MARKERS} más recientes)
                 </h2>
                 {loading && (
-                    <span className="text-xs font-mono text-neutral-400">Geocodificando direcciones...</span>
+                    <span className="text-xs font-mono text-zinc-500">Geocodificando direcciones...</span>
                 )}
             </div>
 
@@ -189,7 +191,7 @@ export default function LogisticsMap({ shipments }: Props) {
             </div>
 
             {!loading && resueltos.length < shipments.length && (
-                <p className="text-xs text-neutral-500 dark:text-neutral-400 mt-2 font-mono">
+                <p className="text-xs text-zinc-500 mt-2 font-mono">
                     Mostrando {resueltos.length} de {shipments.length} envíos en el mapa.
                     Direcciones que no pudieron geocodificarse quedaron fuera.
                 </p>
