@@ -47,5 +47,12 @@ export default async function Page({ searchParams }: PageProps) {
         fetchLogisticaKpis(rango),
     ]);
 
-    return <LogisticsView shipments={shipments} kpis={kpis} rango={rango} />;
+    return (
+        <LogisticsView
+            shipments={shipments}
+            kpis={kpis}
+            rango={rango}
+            buyerUrl={process.env.BUYER_APP_URL}
+        />
+    );
 }

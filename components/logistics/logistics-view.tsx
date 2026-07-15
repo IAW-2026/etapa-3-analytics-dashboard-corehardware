@@ -4,12 +4,14 @@ import LogisticsKpiStrip from "@/components/logistics/logistics-kpi-strip";
 import LogisticsAtRiskAlert from "@/components/logistics/logistics-at-risk-alert";
 import LogisticsDateRangeFilter from "@/components/logistics/logistics-date-range-filter";
 import LogisticsMap from "@/components/logistics/logistics-map";
+import LogisticsBuyerCTA from "@/components/logistics/logistics-buyer-cta";
 import type { Shipment, LogisticaKpis } from "@/types/types";
 
 type Props = {
     shipments: Shipment[] | null;
     kpis: LogisticaKpis | null;
     rango: string;
+    buyerUrl?: string;
 };
 
 function SectionTitle({ title }: { title: string }) {
@@ -22,7 +24,7 @@ function SectionTitle({ title }: { title: string }) {
     );
 }
 
-export default function LogisticsView({ shipments, kpis, rango }: Props) {
+export default function LogisticsView({ shipments, kpis, rango, buyerUrl }: Props) {
     return (
         <main className="p-8 bg-neutral-50 dark:bg-neutral-950 min-h-screen">
             <div className="mb-8 flex items-end justify-between flex-wrap gap-4">
@@ -47,6 +49,8 @@ export default function LogisticsView({ shipments, kpis, rango }: Props) {
 
             <SectionTitle title="Envíos" />
             <LogisticsTable shipments={shipments} />
+
+            <LogisticsBuyerCTA buyerUrl={buyerUrl} />
         </main>
     );
 }
