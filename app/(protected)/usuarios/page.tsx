@@ -1,4 +1,5 @@
 import UsersView from "@/components/users/users-view";
+import { fetchVendedores } from "@/lib/sync/fetchers";
 import type { Buyer, Seller, Operator } from "@/types/types";
 
 async function fetchBuyers(): Promise<Buyer[] | null> {
@@ -14,11 +15,13 @@ async function fetchBuyers(): Promise<Buyer[] | null> {
     }
 }
 
-// TODO: reemplazar cuando el Seller App exponga GET /api/sellers
 async function fetchSellers(): Promise<Seller[] | null> {
-    return null;
+    try {
+        return await fetchVendedores();
+    } catch {
+        return null;
+    }
 }
-
 // TODO: reemplazar cuando el Shipping App exponga GET /api/operators
 async function fetchOperators(): Promise<Operator[] | null> {
     return null;

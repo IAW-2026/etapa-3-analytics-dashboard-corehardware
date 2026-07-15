@@ -2,6 +2,7 @@ import type { SourceApp, SyncStatus } from "@prisma/client";
 import type { Tone } from "@/styles/theme";
 import type { ApiHealthStatus } from "./types";
 import { chartCategoryColors } from "@/styles/theme";
+import type { Payment, Dispute } from "@/types/types";
 
 export const CHANGE_PCT_COMPARISON_DAYS = 7;
 
@@ -109,3 +110,63 @@ export const ORDER_STATUS_SORT_ORDER: readonly string[] = [
   'PAGO_RECHAZADO',
   'CANCELADO',
 ];
+
+// ---- Finanzas: Payment ----
+// Cada estado tiene un color de badge y de gráfico ÚNICO (no se reutilizan
+// los 4 Tone semánticos, que generaban colisiones entre dominios distintos,
+// p.ej. "acreditado" y "repuesta" pintando igual por compartir tone=success).
+export const PAYMENT_STATUS_LABEL: Record<Payment["estado"], string> = {
+  acreditado: "Acreditado",
+  pendiente: "Pendiente",
+  rechazado: "Rechazado",
+  en_proceso: "En proceso",
+  cancelado: "Cancelado",
+  reembolsado: "Reembolsado",
+  contracargo: "Contracargo",
+};
+
+export const PAYMENT_STATUS_BADGE_CLASS: Record<Payment["estado"], string> = {
+  acreditado: "bg-emerald-400/10 text-emerald-400",
+  pendiente: "bg-violet-400/10 text-violet-400",
+  en_proceso: "bg-cyan-400/10 text-cyan-400",
+  rechazado: "bg-rose-400/10 text-rose-400",
+  cancelado: "bg-zinc-400/10 text-zinc-400",
+  reembolsado: "bg-amber-400/10 text-amber-400",
+  contracargo: "bg-orange-400/10 text-orange-400",
+};
+
+export const PAYMENT_STATUS_CHART_COLOR: Record<Payment["estado"], string> = {
+  acreditado: chartCategoryColors.emerald,
+  pendiente: chartCategoryColors.violet,
+  en_proceso: chartCategoryColors.cyan,
+  rechazado: chartCategoryColors.rose,
+  cancelado: chartCategoryColors.zinc,
+  reembolsado: chartCategoryColors.amber,
+  contracargo: chartCategoryColors.orange,
+};
+
+// ---- Finanzas: Dispute ----
+// Hues disjuntos de los de Payment (sky/fuchsia/lime/indigo vs.
+// emerald/violet/cyan/rose/zinc/amber/orange) para que ningún estado de
+// disputa comparta color con ningún estado de pago.
+export const DISPUTE_STATUS_LABEL: Record<Dispute["estado"], string> = {
+  pendiente: "Pendiente",
+  reembolsada: "Reembolsada",
+  repuesta: "Repuesta",
+  rechazada: "Rechazada",
+};
+
+export const DISPUTE_STATUS_BADGE_CLASS: Record<Dispute["estado"], string> = {
+  pendiente: "bg-sky-400/10 text-sky-400",
+  reembolsada: "bg-fuchsia-400/10 text-fuchsia-400",
+  repuesta: "bg-lime-400/10 text-lime-400",
+  rechazada: "bg-indigo-400/10 text-indigo-400",
+};
+
+// Colores para el pie de antigüedad de disputas pendientes (finances-charts).
+export const DISPUTE_AGE_BUCKET_COLOR: Record<string, string> = {
+  "0-7 días": chartCategoryColors.violet,
+  "8-15 días": chartCategoryColors.cyan,
+  "16-30 días": chartCategoryColors.amber,
+  "30+ días": chartCategoryColors.rose,
+};

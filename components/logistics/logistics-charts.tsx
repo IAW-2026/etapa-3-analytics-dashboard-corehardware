@@ -6,6 +6,8 @@ import {
     CartesianGrid,
     Cell,
     Legend,
+    Line,
+    LineChart,
     Pie,
     PieChart,
     ResponsiveContainer,
@@ -51,15 +53,27 @@ function buildEstadoDistribucion(shipments: Shipment[]) {
         .filter((b) => b.count > 0);
 }
 
-function buildCargaPorOperador(shipments: Shipment[]) {
-    const counts = new Map<string, number>();
+function buildCargaConOnTimePorOperador(shipments: Shipment[]) {
+    // Por cada operador: envios totales, y de los entregados, cuantos on-time / tarde.
+    const map = new Map<string, { total: number; aTiempo: number; tarde: number; enCurso: number }>();
     for (const s of shipments) {
         const nombre = s.operador ? s.operador.nombre : "Sin asignar";
-        counts.set(nombre, (counts.get(nombre) ?? 0) + 1);
+        if (!map.has(nombre)) map.set(nombre, { total: 0, aTiempo: 0, tarde: 0, enCurso: 0 });
+        const row = map.get(nombre)!;
+        row.total++;
+        if (s.estado === "ENTREGADO" && s.fecha_de_entrega && s.fecha_estimada) {
+            const onTime =
+                new Date(s.fecha_de_entrega).getTime() <=
+                new Date(s.fecha_estimada).getTime();
+            if (onTime) row.aTiempo++;
+            else row.tarde++;
+        } else {
+            row.enCurso++;
+        }
     }
-    return Array.from(counts.entries())
-        .map(([nombre, count]) => ({ nombre, count }))
-        .sort((a, b) => b.count - a.count);
+    return Array.from(map.entries())
+        .map(([nombre, r]) => ({ nombre, ...r }))
+        .sort((a, b) => b.total - a.total);
 }
 
 function buildSlaCumplimiento(shipments: Shipment[]) {
@@ -84,6 +98,54 @@ function buildMontoPorEstado(shipments: Shipment[]) {
         .filter((b) => b.monto > 0);
 }
 
+// Extrae la ciudad como la parte 2 de "Calle X, Ciudad, Provincia".
+// Si la direccion no tiene coma, usa la direccion completa.
+function extraerCiudad(direccion: string): string {
+    const partes = direccion.split(",").map((p) => p.trim()).filter(Boolean);
+    if (partes.length >= 2) return partes[1];
+    return partes[0] ?? "Sin ciudad";
+}
+
+function buildTopDestinos(shipments: Shipment[], top = 5) {
+    const counts = new Map<string, number>();
+    for (const s of shipments) {
+        const ciudad = extraerCiudad(s.direccion);
+        counts.set(ciudad, (counts.get(ciudad) ?? 0) + 1);
+    }
+    return Array.from(counts.entries())
+        .map(([ciudad, count]) => ({ ciudad, count }))
+        .sort((a, b) => b.count - a.count)
+        .slice(0, top);
+}
+
+function buildEntregasPorSemana(shipments: Shipment[]) {
+    const entregados = shipments.filter(
+        (s) => s.estado === "ENTREGADO" && s.fecha_de_entrega
+    );
+    if (entregados.length === 0) return [];
+
+    // Agrupar por semana (yyyy-Www)
+    const buckets = new Map<string, { semana: string; count: number; ts: number }>();
+    for (const s of entregados) {
+        const d = new Date(s.fecha_de_entrega!);
+        // Inicio de la semana (domingo)
+        const inicio = new Date(d);
+        inicio.setDate(d.getDate() - d.getDay());
+        inicio.setHours(0, 0, 0, 0);
+        const key = inicio.toISOString().slice(0, 10);
+        if (!buckets.has(key)) {
+            const label = inicio.toLocaleDateString("es-AR", {
+                day: "2-digit",
+                month: "2-digit",
+            });
+            buckets.set(key, { semana: label, count: 0, ts: inicio.getTime() });
+        }
+        buckets.get(key)!.count++;
+    }
+
+    return Array.from(buckets.values()).sort((a, b) => a.ts - b.ts);
+}
+
 function CountTooltip({ active, payload }: { active?: boolean; payload?: { name: string; value: number; color: string }[] }) {
     if (!active || !payload?.length) return null;
     const entry = payload[0];
@@ -103,13 +165,37 @@ function MontoTooltip({ active, payload, label }: { active?: boolean; payload?: 
     );
 }
 
+function OperadorTooltip({
+    active,
+    payload,
+    label,
+}: {
+    active?: boolean;
+    payload?: { name: string; value: number; color: string; dataKey: string }[];
+    label?: string;
+}) {
+    if (!active || !payload?.length) return null;
+    return (
+        <div className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-lg px-3 py-2 text-xs shadow-sm">
+            <p className="font-mono text-neutral-500 dark:text-neutral-400 mb-1">{label}</p>
+            {payload.map((entry) => (
+                <p key={entry.dataKey} style={{ color: entry.color }} className="font-mono">
+                    {entry.name}: {entry.value}
+                </p>
+            ))}
+        </div>
+    );
+}
+
 export default function LogisticsCharts({ shipments }: Props) {
     if (!shipments || shipments.length === 0) return null;
 
     const estadoDistribucion = buildEstadoDistribucion(shipments);
-    const cargaPorOperador = buildCargaPorOperador(shipments);
+    const cargaPorOperador = buildCargaConOnTimePorOperador(shipments);
     const slaCumplimiento = buildSlaCumplimiento(shipments);
     const montoPorEstado = buildMontoPorEstado(shipments);
+    const topDestinos = buildTopDestinos(shipments, 5);
+    const entregasPorSemana = buildEntregasPorSemana(shipments);
 
     return (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-6">
@@ -132,7 +218,7 @@ export default function LogisticsCharts({ shipments }: Props) {
 
             <div className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-lg p-5">
                 <h2 className="text-xs font-mono tracking-[0.1em] uppercase text-neutral-400 dark:text-neutral-500 mb-4">
-                    Carga por operador
+                    Carga y cumplimiento por operador
                 </h2>
                 <ResponsiveContainer width="100%" height={240}>
                     <BarChart data={cargaPorOperador} margin={{ top: 4, right: 4, left: 0, bottom: 0 }}>
@@ -150,8 +236,11 @@ export default function LogisticsCharts({ shipments }: Props) {
                             width={30}
                             allowDecimals={false}
                         />
-                        <Tooltip content={<CountTooltip />} cursor={{ fill: "currentColor", opacity: 0.04 }} />
-                        <Bar dataKey="count" name="Envíos" fill="#8b5cf6" radius={[4, 4, 0, 0]} maxBarSize={40} />
+                        <Tooltip content={<OperadorTooltip />} cursor={{ fill: "currentColor", opacity: 0.04 }} />
+                        <Legend wrapperStyle={{ fontSize: 11, fontFamily: "monospace" }} />
+                        <Bar dataKey="aTiempo" name="Entregados a tiempo" stackId="op" fill="#34d399" maxBarSize={40} />
+                        <Bar dataKey="tarde" name="Entregados tarde" stackId="op" fill="#f87171" maxBarSize={40} />
+                        <Bar dataKey="enCurso" name="En curso" stackId="op" fill="#a1a1aa" maxBarSize={40} radius={[4, 4, 0, 0]} />
                     </BarChart>
                 </ResponsiveContainer>
             </div>
@@ -204,6 +293,76 @@ export default function LogisticsCharts({ shipments }: Props) {
                     </BarChart>
                 </ResponsiveContainer>
             </div>
+
+            {topDestinos.length > 0 && (
+                <div className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-lg p-5">
+                    <h2 className="text-xs font-mono tracking-[0.1em] uppercase text-neutral-400 dark:text-neutral-500 mb-4">
+                        Top {topDestinos.length} destinos
+                    </h2>
+                    <ResponsiveContainer width="100%" height={240}>
+                        <BarChart
+                            data={topDestinos}
+                            layout="vertical"
+                            margin={{ top: 4, right: 4, left: 0, bottom: 0 }}
+                        >
+                            <CartesianGrid stroke="currentColor" strokeOpacity={0.06} horizontal={false} />
+                            <XAxis
+                                type="number"
+                                tick={{ fontSize: 11, fontFamily: "monospace", fill: "currentColor", opacity: 0.4 }}
+                                axisLine={false}
+                                tickLine={false}
+                                allowDecimals={false}
+                            />
+                            <YAxis
+                                dataKey="ciudad"
+                                type="category"
+                                tick={{ fontSize: 11, fontFamily: "monospace", fill: "currentColor", opacity: 0.4 }}
+                                axisLine={false}
+                                tickLine={false}
+                                width={120}
+                            />
+                            <Tooltip content={<CountTooltip />} cursor={{ fill: "currentColor", opacity: 0.04 }} />
+                            <Bar dataKey="count" name="Envíos" fill="#a78bfa" radius={[0, 4, 4, 0]} maxBarSize={20} />
+                        </BarChart>
+                    </ResponsiveContainer>
+                </div>
+            )}
+
+            {entregasPorSemana.length > 0 && (
+                <div className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-lg p-5 lg:col-span-2">
+                    <h2 className="text-xs font-mono tracking-[0.1em] uppercase text-neutral-400 dark:text-neutral-500 mb-4">
+                        Entregas por semana
+                    </h2>
+                    <ResponsiveContainer width="100%" height={240}>
+                        <LineChart data={entregasPorSemana} margin={{ top: 4, right: 16, left: 0, bottom: 0 }}>
+                            <CartesianGrid stroke="currentColor" strokeOpacity={0.06} vertical={false} />
+                            <XAxis
+                                dataKey="semana"
+                                tick={{ fontSize: 11, fontFamily: "monospace", fill: "currentColor", opacity: 0.4 }}
+                                axisLine={false}
+                                tickLine={false}
+                            />
+                            <YAxis
+                                tick={{ fontSize: 11, fontFamily: "monospace", fill: "currentColor", opacity: 0.4 }}
+                                axisLine={false}
+                                tickLine={false}
+                                width={30}
+                                allowDecimals={false}
+                            />
+                            <Tooltip content={<CountTooltip />} cursor={{ stroke: "currentColor", strokeOpacity: 0.1 }} />
+                            <Line
+                                type="monotone"
+                                dataKey="count"
+                                name="Entregados"
+                                stroke="#34d399"
+                                strokeWidth={2}
+                                dot={{ r: 3, fill: "#34d399" }}
+                                activeDot={{ r: 5 }}
+                            />
+                        </LineChart>
+                    </ResponsiveContainer>
+                </div>
+            )}
         </div>
     );
 }

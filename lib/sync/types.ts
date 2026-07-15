@@ -107,6 +107,11 @@ export type ProductosResponse = {
 export type Vendedor = {
   id: string;
   razon_social: string;
+  cuit: string;
+  mail: string;
+  celular: string;
+  condicion_iva: string;
+  fecha_creacion: string; // ISO 8601
 };
 
 export type VendedoresResponse = {

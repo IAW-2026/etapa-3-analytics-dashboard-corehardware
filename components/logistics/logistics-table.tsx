@@ -1,9 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import type { Shipment } from "@/types/types";
 
 const STATES = ["Todos", "PENDIENTE", "ASIGNADO", "RETIRADO", "EN_CAMINO", "ENTREGADO"];
+const PAGE_SIZE = 10;
 
 const stateBadge = (state: string) => {
     const map: Record<string, string> = {
@@ -22,6 +24,7 @@ type Props = {
 
 export default function LogisticsTable({ shipments }: Props) {
     const [filter, setFilter] = useState("Todos");
+    const [page, setPage] = useState(1);
 
     const filtered =
         shipments === null
@@ -30,21 +33,43 @@ export default function LogisticsTable({ shipments }: Props) {
                 ? shipments
                 : shipments.filter((s) => s.estado === filter);
 
+    const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+
+    // Reset a la pagina 1 cuando cambia el filtro o el dataset.
+    useEffect(() => {
+        setPage(1);
+    }, [filter, shipments]);
+
+    // Si por alguna razon la pagina actual quedo fuera de rango, corregir.
+    useEffect(() => {
+        if (page > totalPages) setPage(totalPages);
+    }, [page, totalPages]);
+
+    const pageStart = (page - 1) * PAGE_SIZE;
+    const pageEnd = pageStart + PAGE_SIZE;
+    const pageItems = filtered.slice(pageStart, pageEnd);
+
     return (
         <>
-            <div className="flex gap-2 mb-6">
-                {STATES.map((e) => (
-                    <button
-                        key={e}
-                        onClick={() => setFilter(e)}
-                        className={`px-3 py-1.5 text-xs font-mono rounded-md border transition-colors ${filter === e
-                                ? "bg-violet-600 border-violet-600 text-white dark:bg-violet-500 dark:border-violet-500"
-                                : "bg-white dark:bg-neutral-900 border-neutral-200 dark:border-neutral-800 text-neutral-500 dark:text-neutral-400 hover:border-violet-400"
-                            }`}
-                    >
-                        {e}
-                    </button>
-                ))}
+            <div className="flex gap-2 mb-6 flex-wrap">
+                {STATES.map((e) => {
+                    const count = e === "Todos"
+                        ? shipments?.length ?? 0
+                        : shipments?.filter((s) => s.estado === e).length ?? 0;
+                    return (
+                        <button
+                            key={e}
+                            onClick={() => setFilter(e)}
+                            className={`px-3 py-1.5 text-xs font-mono rounded-md border transition-colors ${filter === e
+                                    ? "bg-violet-600 border-violet-600 text-white dark:bg-violet-500 dark:border-violet-500"
+                                    : "bg-white dark:bg-neutral-900 border-neutral-200 dark:border-neutral-800 text-neutral-500 dark:text-neutral-400 hover:border-violet-400"
+                                }`}
+                        >
+                            {e}
+                            <span className="ml-1.5 opacity-60">({count})</span>
+                        </button>
+                    );
+                })}
             </div>
 
             <div className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-lg overflow-hidden">
@@ -65,14 +90,14 @@ export default function LogisticsTable({ shipments }: Props) {
                                     Error al cargar los envíos
                                 </td>
                             </tr>
-                        ) : filtered.length === 0 ? (
+                        ) : pageItems.length === 0 ? (
                             <tr>
                                 <td colSpan={7} className="px-4 py-8 text-center text-sm text-neutral-400 dark:text-neutral-600 font-mono">
                                     Sin datos
                                 </td>
                             </tr>
                         ) : (
-                            filtered.map((s) => (
+                            pageItems.map((s) => (
                                 <tr key={s.id} className="border-b border-neutral-100 dark:border-neutral-800/50 hover:bg-neutral-50 dark:hover:bg-neutral-800/30 transition-colors">
                                     <td className="px-4 py-3 font-mono text-xs text-neutral-500">{s.id.slice(-8)}</td>
                                     <td className="px-4 py-3 font-mono text-xs text-neutral-500">{s.pedido_id.slice(-8)}</td>
@@ -96,6 +121,35 @@ export default function LogisticsTable({ shipments }: Props) {
                         )}
                     </tbody>
                 </table>
+
+                {filtered.length > PAGE_SIZE && (
+                    <div className="flex items-center justify-between px-4 py-3 border-t border-neutral-200 dark:border-neutral-800 bg-neutral-50 dark:bg-neutral-900/50">
+                        <span className="text-xs font-mono text-neutral-500 dark:text-neutral-400">
+                            {pageStart + 1}–{Math.min(pageEnd, filtered.length)} de {filtered.length}
+                        </span>
+                        <div className="flex items-center gap-1">
+                            <button
+                                onClick={() => setPage((p) => Math.max(1, p - 1))}
+                                disabled={page === 1}
+                                className="p-1.5 rounded border border-neutral-200 dark:border-neutral-800 text-neutral-500 dark:text-neutral-400 hover:border-violet-400 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                                aria-label="Página anterior"
+                            >
+                                <ChevronLeft className="h-4 w-4" />
+                            </button>
+                            <span className="text-xs font-mono px-3 text-neutral-500 dark:text-neutral-400">
+                                {page} / {totalPages}
+                            </span>
+                            <button
+                                onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                                disabled={page === totalPages}
+                                className="p-1.5 rounded border border-neutral-200 dark:border-neutral-800 text-neutral-500 dark:text-neutral-400 hover:border-violet-400 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                                aria-label="Página siguiente"
+                            >
+                                <ChevronRight className="h-4 w-4" />
+                            </button>
+                        </div>
+                    </div>
+                )}
             </div>
         </>
     );

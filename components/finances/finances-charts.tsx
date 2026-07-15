@@ -4,17 +4,22 @@ import {
     Bar,
     BarChart,
     CartesianGrid,
+    Cell,
     Legend,
     Pie,
     PieChart,
     ResponsiveContainer,
-    Sector,
     Tooltip,
     XAxis,
     YAxis,
 } from "recharts";
-import type { PieSectorDataItem } from "recharts/types/polar/Pie";
 import type { Payment, Dispute } from "@/types/types";
+import { cardLabelClass } from "@/styles/theme";
+import {
+    PAYMENT_STATUS_CHART_COLOR,
+    PAYMENT_STATUS_LABEL,
+    DISPUTE_AGE_BUCKET_COLOR,
+} from "@/lib/dashboard/constants";
 
 type Props = {
     payments: Payment[] | null;
@@ -38,34 +43,11 @@ const MONTH_LABEL_FORMATTER = new Intl.DateTimeFormat("es-AR", {
     year: "2-digit",
 });
 
-const PAYMENT_STATUS_COLORS: Record<Payment["estado"], string> = {
-    acreditado: "#34d399",
-    pendiente: "#a78bfa",
-    rechazado: "#f87171",
-    en_proceso: "#818cf8",
-    cancelado: "#52525b",
-    reembolsado: "#e879f9",
-    contracargo: "#fb923c",
-};
-
-const PAYMENT_STATUS_LABELS: Record<Payment["estado"], string> = {
-    acreditado: "Acreditado",
-    pendiente: "Pendiente",
-    rechazado: "Rechazado",
-    en_proceso: "En proceso",
-    cancelado: "Cancelado",
-    reembolsado: "Reembolsado",
-    contracargo: "Contracargo",
-};
-
 const AGE_BUCKET_LABELS = ["0-7 días", "8-15 días", "16-30 días", "30+ días"] as const;
 
-const AGE_BUCKET_COLOR_BY_LABEL: Record<string, string> = {
-    "0-7 días": "#a78bfa",
-    "8-15 días": "#818cf8",
-    "16-30 días": "#fb923c",
-    "30+ días": "#f87171",
-};
+// Color fijo (no currentColor + opacity) para que el contraste de los ticks
+// sea predecible y no dependa del tema del navegador.
+const AXIS_TICK_COLOR = "#a1a1aa"; // zinc-400, ~7.5:1 sobre zinc-900
 
 const EMPTY_BUCKET = (): Omit<MonthlyBucket, "monthKey" | "label"> => ({
     acreditado: 0, pendiente: 0, rechazado: 0,
@@ -141,8 +123,8 @@ function MonthlyAmountTooltip({
 }) {
     if (!active || !payload?.length) return null;
     return (
-        <div className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-lg px-3 py-2 text-xs shadow-sm">
-            <p className="font-mono text-neutral-500 dark:text-neutral-400 mb-1">{label}</p>
+        <div className="bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-2 text-xs shadow-sm">
+            <p className="font-mono text-zinc-400 mb-1">{label}</p>
             {payload.map((entry) => (
                 <p key={entry.dataKey} style={{ color: entry.color }} className="font-mono">
                     {entry.name}: {formatCurrency(entry.value)}
@@ -162,7 +144,7 @@ function DisputeAgeTooltip({
     if (!active || !payload?.length) return null;
     const entry = payload[0];
     return (
-        <div className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-lg px-3 py-2 text-xs shadow-sm">
+        <div className="bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-2 text-xs shadow-sm">
             <p style={{ color: entry.color }} className="font-mono">
                 {entry.name}: {entry.value}
             </p>
@@ -170,12 +152,26 @@ function DisputeAgeTooltip({
     );
 }
 
-function getActiveStates(data: MonthlyBucket[]): Payment["estado"][] {
-    const all = Object.keys(PAYMENT_STATUS_COLORS) as Payment["estado"][];
-    return all.filter((state) => data.some((bucket) => bucket[state] > 0));
+function DisputeAgeLegend({ buckets }: { buckets: { label: string; count: number }[] }) {
+    return (
+        <ul className="flex flex-wrap gap-3 justify-center mt-2">
+            {buckets.map((entry) => (
+                <li key={entry.label} className="flex items-center gap-1.5 text-xs font-mono" style={{ color: AXIS_TICK_COLOR }}>
+                    <span
+                        className="inline-block w-2.5 h-2.5 rounded-sm"
+                        style={{ backgroundColor: DISPUTE_AGE_BUCKET_COLOR[entry.label as keyof typeof DISPUTE_AGE_BUCKET_COLOR] }}
+                    />
+                    {entry.label}
+                </li>
+            ))}
+        </ul>
+    );
 }
 
-const PAYMENT_STATE_LIST = Object.keys(PAYMENT_STATUS_COLORS) as Payment["estado"][];
+function getActiveStates(data: MonthlyBucket[]): Payment["estado"][] {
+    const all = Object.keys(PAYMENT_STATUS_CHART_COLOR) as Payment["estado"][];
+    return all.filter((state) => data.some((bucket) => bucket[state] > 0));
+}
 
 export default function FinancesCharts({ payments, disputes }: Props) {
     const monthlyData = payments && payments.length > 0 ? buildMonthlyAmountByStatus(payments) : null;
@@ -189,69 +185,78 @@ export default function FinancesCharts({ payments, disputes }: Props) {
     return (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-6">
             {monthlyData && (
-                <div className="lg:col-span-2 bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-lg p-5">
-                    <h2 className="text-xs font-mono tracking-[0.1em] uppercase text-neutral-400 dark:text-neutral-500 mb-4">
-                        Monto mensual por estado
-                    </h2>
-                    <ResponsiveContainer width="100%" height={260}>
-                        <BarChart data={monthlyData} margin={{ top: 4, right: 4, left: 0, bottom: 0 }}>
-                            <CartesianGrid stroke="currentColor" strokeOpacity={0.06} vertical={false} />
-                            <XAxis
-                                dataKey="label"
-                                tick={{ fontSize: 11, fontFamily: "monospace", fill: "currentColor", opacity: 0.4 }}
-                                axisLine={false}
-                                tickLine={false}
-                            />
-                            <YAxis
-                                tick={{ fontSize: 11, fontFamily: "monospace", fill: "currentColor", opacity: 0.4 }}
-                                axisLine={false}
-                                tickLine={false}
-                                width={70}
-                                tickFormatter={formatCurrency}
-                            />
-                            <Tooltip content={<MonthlyAmountTooltip />} cursor={{ fill: "currentColor", opacity: 0.04 }} />
-                            <Legend wrapperStyle={{ fontSize: 11, fontFamily: "monospace" }} />
-                            {getActiveStates(monthlyData).map((state, i, arr) => (
-                                <Bar
-                                    key={state}
-                                    dataKey={state}
-                                    stackId="state"
-                                    fill={PAYMENT_STATUS_COLORS[state]}
-                                    name={PAYMENT_STATUS_LABELS[state]}
-                                    maxBarSize={40}
-                                    radius={i === arr.length - 1 ? [4, 4, 0, 0] : undefined}
+                <div className="lg:col-span-2 rounded-lg border border-zinc-800 bg-zinc-900 p-5">
+                    <h2 className={`${cardLabelClass} mb-4`}>Monto mensual por estado</h2>
+                    <div
+                        role="img"
+                        aria-label={`Gráfico de barras apiladas: monto mensual de pagos por estado, ${monthlyData.length} meses.`}
+                    >
+                        <ResponsiveContainer width="100%" height={260}>
+                            <BarChart data={monthlyData} margin={{ top: 4, right: 4, left: 0, bottom: 0 }}>
+                                <CartesianGrid stroke="#27272a" vertical={false} />
+                                <XAxis
+                                    dataKey="label"
+                                    tick={{ fontSize: 11, fontFamily: "monospace", fill: AXIS_TICK_COLOR }}
+                                    axisLine={false}
+                                    tickLine={false}
                                 />
-                            ))}
-                        </BarChart>
-                    </ResponsiveContainer>
+                                <YAxis
+                                    tick={{ fontSize: 11, fontFamily: "monospace", fill: AXIS_TICK_COLOR }}
+                                    axisLine={false}
+                                    tickLine={false}
+                                    width={70}
+                                    tickFormatter={formatCurrency}
+                                />
+                                <Tooltip content={<MonthlyAmountTooltip />} cursor={{ fill: "#3f3f46", opacity: 0.3 }} />
+                                <Legend wrapperStyle={{ fontSize: 11, fontFamily: "monospace", color: AXIS_TICK_COLOR }} />
+                                {getActiveStates(monthlyData).map((state, i, arr) => (
+                                    <Bar
+                                        key={state}
+                                        dataKey={state}
+                                        stackId="state"
+                                        fill={PAYMENT_STATUS_CHART_COLOR[state]}
+                                        name={PAYMENT_STATUS_LABEL[state]}
+                                        maxBarSize={40}
+                                        radius={i === arr.length - 1 ? [4, 4, 0, 0] : undefined}
+                                    />
+                                ))}
+                            </BarChart>
+                        </ResponsiveContainer>
+                    </div>
                 </div>
             )}
 
             {hasOpenDisputeData && (
-                <div className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-lg p-5">
-                    <h2 className="text-xs font-mono tracking-[0.1em] uppercase text-neutral-400 dark:text-neutral-500 mb-4">
-                        Antigüedad de disputas pendientes
-                    </h2>
-                    <ResponsiveContainer width="100%" height={260}>
-                        <PieChart>
-                            <Pie
-                                data={openDisputeAgeBuckets}
-                                dataKey="count"
-                                nameKey="label"
-                                innerRadius={55}
-                                outerRadius={85}
-                                paddingAngle={2}
-                                shape={(props: PieSectorDataItem) => (
-                                    <Sector
-                                        {...props}
-                                        fill={AGE_BUCKET_COLOR_BY_LABEL[props.payload?.label as string]}
-                                    />
-                                )}
-                            />
-                            <Tooltip content={<DisputeAgeTooltip />} />
-                            <Legend wrapperStyle={{ fontSize: 11, fontFamily: "monospace" }} />
-                        </PieChart>
-                    </ResponsiveContainer>
+                <div className="rounded-lg border border-zinc-800 bg-zinc-900 p-5">
+                    <h2 className={`${cardLabelClass} mb-4`}>Antigüedad de disputas pendientes</h2>
+                    <div
+                        role="img"
+                        aria-label={`Gráfico de torta: antigüedad de disputas pendientes agrupadas en ${openDisputeAgeBuckets.length} rangos.`}
+                    >
+                        <ResponsiveContainer width="100%" height={260}>
+                            <PieChart>
+                                <Pie
+                                    data={openDisputeAgeBuckets}
+                                    dataKey="count"
+                                    nameKey="label"
+                                    innerRadius={55}
+                                    outerRadius={85}
+                                    paddingAngle={2}
+                                >
+                                    {openDisputeAgeBuckets.map((entry) => (
+                                        <Cell key={entry.label} fill={DISPUTE_AGE_BUCKET_COLOR[entry.label]} />
+                                    ))}
+                                </Pie>
+                                <Tooltip content={<DisputeAgeTooltip />} />
+                                {/*
+                                    Recharts no arma la leyenda de un Pie a partir de los
+                                    <Cell> automáticamente — hay que pasarle el payload
+                                    (label + color) explícito, o los swatches salen vacíos.
+                                */}
+                               <Legend content={<DisputeAgeLegend buckets={openDisputeAgeBuckets} />} />
+                            </PieChart>
+                        </ResponsiveContainer>
+                    </div>
                 </div>
             )}
         </div>
