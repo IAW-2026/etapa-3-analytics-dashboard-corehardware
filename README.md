@@ -9,7 +9,7 @@ Herramienta de inteligencia de negocio (Etapa 3): KPIs, gráficos y métricas co
 > Sólo lectura. No es un CRUD — consulta cada app vía API y visualiza los datos.
 
 ## Enlace de deployment:
-- https://etapa-3-analytics-dashboard-corehar.vercel.app/
+- https://analytics-dashboard-corehardware.vercel.app/
 
 ---
 
