@@ -83,3 +83,17 @@ export type Order = {
     monto: number;
     estado: string;
 };
+
+export type LogisticaKpis = {
+    ventana_dias: number;
+    total_envios: { actual: number; anterior: number };
+    on_time: {
+        porcentaje_actual: number | null;
+        porcentaje_anterior: number | null;
+        entregados_actual: number;
+        entregados_anterior: number;
+    };
+    tiempo_transito_dias: { actual: number | null; anterior: number | null };
+    en_curso: number;
+    en_riesgo: number;
+};
