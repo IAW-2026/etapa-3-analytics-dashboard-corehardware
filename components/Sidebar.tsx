@@ -12,6 +12,7 @@ import {
   ClipboardList,
   ChevronLeft,
   ChevronRight,
+  ShoppingBag,
 } from "lucide-react";
 
 const SIDEBAR_COLLAPSED_KEY = "sidebar-collapsed";
@@ -35,6 +36,7 @@ const navItems: NavItem[] = [
   { href: "/logistica", label: "Logística", icon: Truck },
   { href: "/ventas", label: "Ventas", icon: ShoppingCart },
   { href: "/usuarios", label: "Usuarios", icon: Users },
+  { href: "/productos", label: "Productos", icon: ShoppingBag },
 ];
 
 export function Sidebar() {

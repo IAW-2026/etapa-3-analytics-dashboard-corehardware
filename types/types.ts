@@ -25,6 +25,15 @@ export type Sale = {
     totalPrice: number;
 };
 
+export type BestSellingProduct = {
+    name: string;
+    brand: string;
+    model: string;
+    price: string;
+    sellerName: string;
+    totalSold: number;
+}
+
 export type Shipment = {
     id: string;
     pedido_id: string;
