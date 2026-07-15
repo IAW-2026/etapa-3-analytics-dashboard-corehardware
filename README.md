@@ -8,11 +8,8 @@ Herramienta de inteligencia de negocio (Etapa 3): KPIs, gráficos y métricas co
 
 > Sólo lectura. No es un CRUD — consulta cada app vía API y visualiza los datos.
 
-## Repositorio sin desarrollo completo planificado
-
-> Tras consultar con la cátedra, se confirmó que las apps **Control Plane** y **Analytics Dashboard** quedan **fuera del alcance** del trabajo para nuestro equipo en esta entrega. El equipo se concentra en las 4 apps base (Buyer, Seller, Shipping, Payments) y su integración inter-servicio.
->
-> Este repo se entrega con implementacion parcial.
+## Enlace de deployment:
+- https://etapa-3-analytics-dashboard-corehar.vercel.app/
 
 ---
 
@@ -22,8 +19,8 @@ Herramienta de inteligencia de negocio (Etapa 3): KPIs, gráficos y métricas co
 - **Autenticación:** Clerk (rol `admin`)
 - **Estilos:** Tailwind CSS v4
 - **Deploy:** Vercel
+- **Base de Datos:** Prisma + Neon (Solo se utiliza para datos procesados y gráficos, los datos crudos se obtienen a travez de las APIs de las otras apps)
 
-Sin base de datos: todos los datos vienen de las APIs de las 4 apps del ecosistema.
 
 ---
 
@@ -33,11 +30,15 @@ Sin base de datos: todos los datos vienen de las APIs de las 4 apps del ecosiste
 app/                    → páginas Next.js
   ├ page.tsx            → Landing Page
   ├ dashboard/          → Dashboard global (KPIs)
+  ├ pedidos/            → Estadísticas y datos de los pedidos
   ├ logistica/          → métricas de envíos (Shipping App)
-  ├ ventas/             → métricas de pedidos y productos (Buyer + Seller)
+  ├ ventas/             → datos de las ventas
   ├ finanzas/           → ingresos, pagos, disputas (Payments)
-  └ usuarios/           → compradores, vendedores, operadores
+  ├ usuarios/           → compradores, vendedores, operadores
+  └ productos/          → productos más vendidos
 components/             → React components reutilizables
+prisma/                 → Base de datos (Solo estadísticas calculadas)
+styles/                 → Estilos
 types/                  → Tipos de datos
 proxy.ts                → bloquea acceso sin rol admin
 ```
@@ -51,6 +52,14 @@ proxy.ts                → bloquea acceso sin rol admin
 | `main` | Produccion |
 | `develop` | Integración de features |
 | `feature/*` | Features puntuales que se mergean a `develop` |
+| `fix/*`     | Fixes de bugs o inconcistencias que se mergean a `develop` | 
+
+---
+
+## Usuarios
+
+- Usuario único (solo administrador puede logearse al Analytics Dashboard) :admin+clerk_test@iaw.com
+- Password: iawuser#
 
 ---
 
@@ -74,8 +83,8 @@ Abrir `http://localhost:3000` y loguearse con un usuario admin de Clerk.
 | App | Endpoints stats esperados | Estado |
 |-----|--------------------------|--------|
 | Shipping | `/api/admin/stats/resumen`, `/api/admin/stats/envios-por-estado`, `/api/admin/stats/operadores-top`, `/api/admin/stats/entregas-recientes` | ✅ Listos |
-| Buyer | `/api/control-plane/stats/orders`, `/api/control-plane/stats/buyers` | ❌ Pendientes |
-| Seller | `/api/control-plane/stats/sales`, `/api/control-plane/stats/products` | ❌ Pendientes |
+| Buyer | `/api/control-plane/stats/orders`, `/api/control-plane/stats/buyers` | ✅ Listos |
+| Seller | `/api/analytics/sellers`, `/api/analytics/products`, `/api/sales`, `/api/products/best-selling `, `/api/sellers/names-ids` | ✅ Listos |
 | Payments | `/api/payments`, `/api/disputes` | ✅ Listos |
 
 A medida que cada app expone sus endpoints, el Dashboard los va consumiendo.
@@ -90,7 +99,7 @@ A medida que cada app expone sus endpoints, el Dashboard los va consumiendo.
 | Seller | Sebastián Pereda |
 | Shipping | Matías Junca |
 | Payments | Agustín Ferrante |
-| Control Plane | — |
-| Analytics Dashboard (este) | Agustín Ferrante |
+| Control Plane | Agustín Ferrante |
+| Analytics Dashboard (este) | Agustín Ferrante / Yanina Rivera / Matías Junca / Sebastián Pereda|
 
 
