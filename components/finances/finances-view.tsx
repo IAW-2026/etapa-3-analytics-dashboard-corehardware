@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import FinancesCharts from "@/components/finances/finances-charts";
 import FinancesTable from "@/components/finances/finances-table";
 import type { Payment, Dispute } from "@/types/types";
@@ -8,17 +9,23 @@ type Props = {
 };
 
 export default function FinancesView({ payments, disputes }: Props) {
+    // Mismo patrón que PedidosPageClient: sin <main> ni fondo propios, porque
+    // el layout de (protected) ya los provee. Antes Finanzas duplicaba ambos,
+    // lo que desalineaba el punto de inicio del contenido contra el resto de
+    // las páginas del dashboard.
     return (
-        <main className="p-8 bg-neutral-50 dark:bg-neutral-950 min-h-screen">
-            <div className="mb-8">
-                <h1 className="text-2xl font-light tracking-[0.05em] text-neutral-900 dark:text-neutral-100">
-                    Finanzas
-                </h1>
-                <div className="h-px w-8 bg-violet-500 mt-2" />
-            </div>
+        <div className="flex flex-col gap-6 p-6">
+            <h1 className="font-mono text-lg uppercase tracking-wide text-zinc-200">Finanzas</h1>
 
             <FinancesCharts payments={payments} disputes={disputes} />
-            <FinancesTable payments={payments} disputes={disputes} />
-        </main>
+
+            {/*
+                FinancesTable usa useSearchParams (paginación vía URL), lo que
+                requiere un Suspense boundary en Next.js App Router.
+            */}
+            <Suspense fallback={null}>
+                <FinancesTable payments={payments} disputes={disputes} />
+            </Suspense>
+        </div>
     );
 }
