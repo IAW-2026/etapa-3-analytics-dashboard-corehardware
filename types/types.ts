@@ -21,7 +21,7 @@ export type Payment = {
 export type Sale = {
     id: string;
     date: string;
-    sellerId: string;
+    sellerName: string;
     totalPrice: number;
 };
 
