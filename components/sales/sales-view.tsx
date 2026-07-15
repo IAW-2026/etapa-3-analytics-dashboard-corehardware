@@ -41,14 +41,19 @@ export default function SalesView({ sales, total, page, pageLimit }: Props) {
                             <tr><td colSpan={4} className="px-4 py-8 text-center text-sm text-red-400 font-mono">Error al cargar las ventas</td></tr>
                         ) : sales.length === 0 ? (
                             <tr><td colSpan={4} className="px-4 py-8 text-center text-sm text-neutral-400 dark:text-neutral-600 font-mono">Sin datos</td></tr>
-                        ) : sales.map((v) => (
-                            <tr key={v.id} className="border-b border-neutral-100 dark:border-neutral-800/50 hover:bg-neutral-50 dark:hover:bg-neutral-800/30 transition-colors">
-                                <td className="px-4 py-3 font-mono text-xs text-neutral-500">{v.id}</td>
-                                <td className="px-4 py-3 text-neutral-500 dark:text-neutral-400">{new Date(v.date).toLocaleDateString("es-AR")}</td>
-                                <td className="px-4 py-3 font-mono text-xs text-neutral-500">{v.sellerId}</td>
-                                <td className="px-4 py-3 text-neutral-700 dark:text-neutral-300">${v.totalPrice.toFixed(2)}</td>
-                            </tr>
-                        ))}
+                        ) : sales.map((v) => {
+                            const totalPrice = typeof v.totalPrice === "number" ? v.totalPrice : Number(v.totalPrice);
+                            const formattedTotal = Number.isFinite(totalPrice) ? totalPrice.toFixed(2) : "0.00";
+
+                            return (
+                                <tr key={v.id} className="border-b border-neutral-100 dark:border-neutral-800/50 hover:bg-neutral-50 dark:hover:bg-neutral-800/30 transition-colors">
+                                    <td className="px-4 py-3 font-mono text-xs text-neutral-500">{v.id}</td>
+                                    <td className="px-4 py-3 text-neutral-500 dark:text-neutral-400">{new Date(v.date).toLocaleDateString("es-AR")}</td>
+                                    <td className="px-4 py-3 font-mono text-xs text-neutral-500">{v.sellerId}</td>
+                                    <td className="px-4 py-3 text-neutral-700 dark:text-neutral-300">${formattedTotal}</td>
+                                </tr>
+                            );
+                        })}
                     </tbody>
                 </table>
             </div>
