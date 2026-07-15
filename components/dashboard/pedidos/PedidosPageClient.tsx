@@ -4,7 +4,7 @@ import { ChevronDown, ChevronsUpDown, ChevronUp } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { OrderMobileCard, OrderTableRow } from "@/components/dashboard/OrderRow";
 import { PedidosFiltersBar } from "./PedidosFiltersBar";
-import { PedidosPagination } from "./PedidosPagination";
+import { Pagination } from "../../shared/Pagination";
 import { usePedidosQuery } from "@/lib/dashboard/hooks/usePedidosQuery";
 import {
   DEFAULT_PEDIDOS_FILTERS,
@@ -12,6 +12,7 @@ import {
   type SortableField,
   type SortDirection,
 } from "@/lib/dashboard/pedidos-types";
+import { PEDIDOS_PAGE_LIMIT } from '@/lib/dashboard/pedidos-types';
 
 const SORTABLE_FIELDS: readonly SortableField[] = ["fecha", "monto", "estado"];
 
@@ -34,6 +35,7 @@ function parseFiltersFromSearchParams(searchParams: URLSearchParams): PedidosFil
     fechaDesde: searchParams.get("fechaDesde") ?? "",
     fechaHasta: searchParams.get("fechaHasta") ?? "",
     page: Number.isNaN(page) || page < 1 ? 1 : page,
+    pageLimit: PEDIDOS_PAGE_LIMIT,
     sortBy: parseSortBy(searchParams.get("sortBy")),
     sortDir: parseSortDir(searchParams.get("sortDir")),
   };
@@ -182,10 +184,11 @@ export function PedidosPageClient() {
               </tbody>
             </table>
 
-            <PedidosPagination
+            <Pagination
               page={filters.page}
               total={data.total}
               onPageChange={(page) => updateFilters({ ...filters, page })}
+              pageLimit={filters.pageLimit}
             />
           </>
         )}

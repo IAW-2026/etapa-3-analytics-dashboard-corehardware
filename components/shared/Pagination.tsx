@@ -1,7 +1,8 @@
 'use client';
 
 import { ChevronLeft, ChevronRight } from 'lucide-react';
-import { PEDIDOS_PAGE_LIMIT } from '@/lib/dashboard/pedidos-types';
+
+const PAGE_LIMIT = 15;
 
 // Ventana de páginas visibles alrededor de la actual + primera/última siempre
 // visibles, con '...' en los huecos. Evita listar decenas de números si hay
@@ -20,23 +21,25 @@ function buildPageList(current: number, total: number): (number | 'ellipsis')[] 
   return result;
 }
 
-export function PedidosPagination({
+export function Pagination({
   page,
   total,
   onPageChange,
+  pageLimit = PAGE_LIMIT,
 }: {
   page: number;
   total: number;
   onPageChange: (page: number) => void;
+  pageLimit?: number;
 }) {
-  const totalPages = Math.max(1, Math.ceil(total / PEDIDOS_PAGE_LIMIT));
+  const totalPages = Math.max(1, Math.ceil(total / pageLimit));
   const canGoPrev = page > 1;
   const canGoNext = page < totalPages;
 
   if (total === 0) return null;
 
-  const startItem = (page - 1) * PEDIDOS_PAGE_LIMIT + 1;
-  const endItem = Math.min(page * PEDIDOS_PAGE_LIMIT, total);
+  const startItem = (page - 1) * pageLimit + 1;
+  const endItem = Math.min(page * pageLimit, total);
   const pageList = buildPageList(page, totalPages);
 
   return (
@@ -66,8 +69,8 @@ export function PedidosPagination({
                 key={item}
                 onClick={() => onPageChange(item)}
                 className={`flex h-8 w-8 items-center justify-center rounded-md border font-mono text-xs transition-colors ${item === page
-                    ? 'border-violet-500 bg-violet-600/10 text-violet-400'
-                    : 'border-zinc-700 text-zinc-500 hover:border-zinc-600 hover:text-zinc-300'
+                  ? 'border-violet-500 bg-violet-600/10 text-violet-400'
+                  : 'border-zinc-700 text-zinc-500 hover:border-zinc-600 hover:text-zinc-300'
                   }`}
               >
                 {item}

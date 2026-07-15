@@ -1,12 +1,23 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import type { Sale } from "@/types/types";
+import { Pagination } from "@/components/shared/Pagination";
 
 type Props = {
     sales: Sale[] | null;
+    total: number;
+    page: number;
+    pageLimit: number;
 };
 
-export default function SalesView({ sales }: Props) {
+export default function SalesView({ sales, total, page, pageLimit }: Props) {
+    const router = useRouter();
+
+    const handlePageChange = (nextPage: number) => {
+        router.push(`/ventas?page=${nextPage}`);
+    };
+
     return (
         <main className="p-8 bg-neutral-50 dark:bg-neutral-950 min-h-screen">
             <div className="mb-8">
@@ -41,6 +52,16 @@ export default function SalesView({ sales }: Props) {
                     </tbody>
                 </table>
             </div>
+            {sales !== null && (
+                <div className="mt-4">
+                    <Pagination
+                        page={page}
+                        total={total}
+                        pageLimit={pageLimit}
+                        onPageChange={handlePageChange}
+                    />
+                </div>
+            )}
         </main>
     );
 }
