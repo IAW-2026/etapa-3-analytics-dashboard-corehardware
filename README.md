@@ -82,8 +82,8 @@ Abrir `http://localhost:3000` y loguearse con un usuario admin de Clerk.
 
 | App | Endpoints stats esperados | Estado |
 |-----|--------------------------|--------|
-| Shipping | `/api/admin/stats/resumen`, `/api/admin/stats/envios-por-estado`, `/api/admin/stats/operadores-top`, `/api/admin/stats/entregas-recientes` | ✅ Listos |
-| Buyer | `/api/control-plane/stats/orders`, `/api/control-plane/stats/buyers` | ✅ Listos |
+| Shipping | `/api/analytics/envios`, `api/analytics/stats/logistica-kpis` | ✅ Listos |
+| Buyer | `api/dashboard-analytics/orders/all`, `api/buyers`, `api/dashboard-analytics/orders` | ✅ Listos |
 | Seller | `/api/analytics/sellers`, `/api/analytics/products`, `/api/sales`, `/api/products/best-selling `, `/api/sellers/names-ids` | ✅ Listos |
 | Payments | `/api/payments`, `/api/disputes` | ✅ Listos |
 
