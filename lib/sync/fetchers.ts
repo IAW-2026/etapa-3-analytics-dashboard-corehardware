@@ -10,6 +10,8 @@ import type {
   ProductosResponse,
   Vendedor,
   VendedoresResponse,
+  Operador,
+  OperadoresResponse,
 } from "./types";
 
 async function fetchJson<T>(url: string, apiKey: string | undefined): Promise<T> {
@@ -68,6 +70,17 @@ export async function fetchVendedores(): Promise<Vendedor[]> {
   return res.items;
 }
 
+// Endpoint de LISTADO de operadores (distinto de /api/analytics/operators/growth,
+// que solo da la serie temporal para el gráfico). Este es el que necesita
+// OperatorsTable en usuarios/page.tsx: nombre/dni/mail/celular completos.
+export async function fetchOperadores(): Promise<Operador[]> {
+  const res = await fetchJson<OperadoresResponse>(
+    `${process.env.SHIPPING_APP_URL}/api/analytics/operadores`,
+    process.env.SHIPPING_API_KEY
+  );
+  return res.items;
+}
+
 // ── Fetch paginado de pedidos por rango de fechas ──────────────────────────
 // No reemplaza a fetchPedidos(): esa sigue alimentando la tabla en vivo vía
 // /api/orders/all. Esta recorre /api/dashboard-analytics/orders (que pagina,
@@ -108,17 +121,19 @@ export type SourceFetchResults = {
   envios: PromiseSettledResult<EnviosResponse>;
   pagos: PromiseSettledResult<Pago[]>;
   disputas: PromiseSettledResult<Disputa[]>;
+  operadores: PromiseSettledResult<Operador[]>;
 };
 
 export async function fetchAllSources(): Promise<SourceFetchResults> {
-  const [compradores, pedidos, ventas, envios, pagos, disputas] = await Promise.allSettled([
+  const [compradores, pedidos, ventas, envios, pagos, disputas, operadores] = await Promise.allSettled([
     fetchCompradores(),
     fetchPedidos(),
     fetchVentas(),
     fetchEnvios(),
     fetchPagos(),
     fetchDisputas(),
+    fetchOperadores(),
   ]);
 
-  return { compradores, pedidos, ventas, envios, pagos, disputas };
+  return { compradores, pedidos, ventas, envios, pagos, disputas, operadores };
 }
