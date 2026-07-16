@@ -17,7 +17,7 @@ type Props = {
 function SectionTitle({ title }: { title: string }) {
     return (
         <div className="mb-3">
-            <h2 className="text-xs font-mono tracking-[0.15em] uppercase text-neutral-500 dark:text-neutral-400">
+            <h2 className="text-xs font-mono tracking-[0.15em] uppercase text-zinc-400">
                 {title}
             </h2>
         </div>
@@ -26,10 +26,10 @@ function SectionTitle({ title }: { title: string }) {
 
 export default function LogisticsView({ shipments, kpis, rango, buyerUrl }: Props) {
     return (
-        <main className="p-8 bg-neutral-50 dark:bg-neutral-950 min-h-screen">
+        <main className="p-8 bg-zinc-950 min-h-screen">
             <div className="mb-8 flex items-end justify-between flex-wrap gap-4">
                 <div>
-                    <h1 className="text-2xl font-light tracking-[0.05em] text-neutral-900 dark:text-neutral-100">
+                    <h1 className="text-2xl font-light tracking-[0.05em] text-zinc-100">
                         Logistica
                     </h1>
                     <div className="h-px w-8 bg-violet-500 mt-2" />

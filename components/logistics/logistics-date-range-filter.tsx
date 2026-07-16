@@ -31,8 +31,8 @@ export default function LogisticsDateRangeFilter({ valor }: Props) {
                     key={op.value}
                     onClick={() => handleChange(op.value)}
                     className={`px-3 py-1.5 text-xs font-mono rounded-md border transition-colors ${valor === op.value
-                            ? "bg-violet-600 border-violet-600 text-white dark:bg-violet-500 dark:border-violet-500"
-                            : "bg-white dark:bg-neutral-900 border-neutral-200 dark:border-neutral-800 text-neutral-500 dark:text-neutral-400 hover:border-violet-400"
+                        ? "bg-violet-600 border-violet-600 text-white"
+                        : "bg-zinc-900 border-zinc-800 text-zinc-400 hover:border-violet-400"
                         }`}
                 >
                     {op.label}

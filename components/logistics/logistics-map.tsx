@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import dynamic from "next/dynamic";
 import type { Shipment } from "@/types/types";
+import { cardClass, cardLabelClass } from "@/styles/theme";
 import "leaflet/dist/leaflet.css";
 
 type Coord = { lat: number; lon: number };
@@ -17,11 +18,10 @@ const ESTADO_COLOR: Record<string, string> = {
 };
 
 const CACHE_KEY = "logistica_geocache_v1";
-const MAP_CENTER: [number, number] = [-38.72, -62.27]; // Bahia Blanca aprox
+const MAP_CENTER: [number, number] = [-38.72, -62.27];
 const MAP_ZOOM = 5;
-const MAX_MARKERS = 30; // limite para no saturar Nominatim
+const MAX_MARKERS = 30;
 
-// Cargar leaflet solo en cliente para evitar SSR errors
 const MapContainer = dynamic(() => import("react-leaflet").then((m) => m.MapContainer), { ssr: false });
 const TileLayer = dynamic(() => import("react-leaflet").then((m) => m.TileLayer), { ssr: false });
 const CircleMarker = dynamic(() => import("react-leaflet").then((m) => m.CircleMarker), { ssr: false });
@@ -88,7 +88,6 @@ export default function LogisticsMap({ shipments }: Props) {
             const cache = loadCache();
             const resultados: ShipmentConCoord[] = [];
 
-            // Direcciones unicas para geocodificar solo una vez por direccion.
             const directsMap = new Map<string, Shipment[]>();
             for (const s of seleccionados) {
                 const key = s.direccion.trim().toLowerCase();
@@ -105,7 +104,6 @@ export default function LogisticsMap({ shipments }: Props) {
                     if (!geo) continue;
                     coord = geo;
                     cache[key] = coord;
-                    // Nominatim rate limit: 1 req/s (best practice)
                     await new Promise((r) => setTimeout(r, 1100));
                 }
                 for (const s of grupo) resultados.push({ ...s, coord });
@@ -127,13 +125,13 @@ export default function LogisticsMap({ shipments }: Props) {
     if (!shipments || shipments.length === 0) return null;
 
     return (
-        <div className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-lg p-5 mb-6">
+        <div className={`${cardClass} mb-6`}>
             <div className="flex items-center justify-between mb-4">
-                <h2 className="text-xs font-mono tracking-[0.1em] uppercase text-neutral-400 dark:text-neutral-500">
+                <h2 className={cardLabelClass}>
                     Mapa de envíos (hasta {MAX_MARKERS} más recientes)
                 </h2>
                 {loading && (
-                    <span className="text-xs font-mono text-neutral-400">Geocodificando direcciones...</span>
+                    <span className="text-xs font-mono text-zinc-500">Geocodificando direcciones...</span>
                 )}
             </div>
 
@@ -189,7 +187,7 @@ export default function LogisticsMap({ shipments }: Props) {
             </div>
 
             {!loading && resueltos.length < shipments.length && (
-                <p className="text-xs text-neutral-500 dark:text-neutral-400 mt-2 font-mono">
+                <p className="text-xs text-zinc-400 mt-2 font-mono">
                     Mostrando {resueltos.length} de {shipments.length} envíos en el mapa.
                     Direcciones que no pudieron geocodificarse quedaron fuera.
                 </p>

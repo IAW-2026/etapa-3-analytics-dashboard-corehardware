@@ -1,5 +1,6 @@
 import { Package, Clock, Truck, Timer, ArrowUpRight, ArrowDownRight } from "lucide-react";
 import type { LogisticaKpis } from "@/types/types";
+import { cardClass, cardLabelClass } from "@/styles/theme";
 
 type Props = {
     kpis: LogisticaKpis | null;
@@ -40,14 +41,12 @@ function KpiTile({
                 : `${value.toLocaleString("es-AR")}${suffix}`;
 
     return (
-        <div className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-lg p-5 flex flex-col gap-3">
+        <div className={`${cardClass} flex flex-col gap-3`}>
             <div className="flex items-center justify-between">
-                <span className="text-xs font-mono tracking-[0.1em] uppercase text-neutral-400 dark:text-neutral-500">
-                    {label}
-                </span>
-                <Icon className="w-4 h-4 text-neutral-300 dark:text-neutral-600" />
+                <span className={cardLabelClass}>{label}</span>
+                <Icon className="w-4 h-4 text-zinc-600" aria-hidden="true" />
             </div>
-            <span className="text-3xl font-light tracking-tight text-neutral-900 dark:text-neutral-100 font-mono">
+            <span className="text-2xl font-semibold tracking-tight text-zinc-100 font-mono">
                 {displayValue}
             </span>
             {mostrarDelta ? (
@@ -56,9 +55,9 @@ function KpiTile({
                         }`}
                 >
                     {isPositivo ? (
-                        <ArrowUpRight className="h-3.5 w-3.5" />
+                        <ArrowUpRight className="h-3.5 w-3.5" aria-hidden="true" />
                     ) : (
-                        <ArrowDownRight className="h-3.5 w-3.5" />
+                        <ArrowDownRight className="h-3.5 w-3.5" aria-hidden="true" />
                     )}
                     <span>{Math.abs(delta).toFixed(1)}% vs período anterior</span>
                 </div>
@@ -72,7 +71,7 @@ function KpiTile({
 export default function LogisticsKpiStrip({ kpis }: Props) {
     if (!kpis) {
         return (
-            <div className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-lg p-5 mb-6">
+            <div className={`${cardClass} mb-6`}>
                 <p className="text-sm text-rose-400 font-mono">
                     Error al cargar las métricas de logística
                 </p>
