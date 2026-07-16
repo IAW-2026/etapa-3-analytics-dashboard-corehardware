@@ -118,3 +118,20 @@ export type VendedoresResponse = {
   total: number;
   items: Vendedor[];
 };
+
+export type Operador = {
+  id: string;
+  nombre: string;
+  apellido: string;
+  mail: string;
+  celular: string;
+  dni: string;
+  is_deleted: boolean;
+  total_envios: number;
+  envios_activos: number;
+};
+
+export type OperadoresResponse = {
+  total: number;
+  items: Operador[];
+};
