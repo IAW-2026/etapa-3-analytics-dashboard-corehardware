@@ -67,7 +67,7 @@ export async function fetchVendedores(): Promise<Vendedor[]> {
     `${process.env.SELLER_APP_URL}/api/analytics/sellers`,
     process.env.SELLER_API_KEY
   );
-  return res.items;
+  return res.items.map((s) => ({ ...s, fecha_alta: s.fecha_creacion }));
 }
 
 // Endpoint de LISTADO de operadores (distinto de /api/analytics/operators/growth,
@@ -78,7 +78,7 @@ export async function fetchOperadores(): Promise<Operador[]> {
     `${process.env.SHIPPING_APP_URL}/api/analytics/operadores`,
     process.env.SHIPPING_API_KEY
   );
-  return res.items;
+  return res.items.map((o) => ({ ...o, fecha_alta: o.fecha_alta }));
 }
 
 // ── Fetch paginado de pedidos por rango de fechas ──────────────────────────
