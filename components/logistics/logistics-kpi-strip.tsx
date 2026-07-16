@@ -1,3 +1,6 @@
+"use client";
+
+import CountUp from "react-countup";
 import { Package, Clock, Truck, Timer, ArrowUpRight, ArrowDownRight, type LucideIcon } from "lucide-react";
 import { cardClass, cardLabelClass } from "@/styles/theme";
 import type { LogisticaKpis } from "@/types/types";
@@ -17,7 +20,8 @@ function KpiTile({
     value,
     delta,
     icon: Icon,
-    formatter,
+    suffix = "",
+    decimals = 0,
     // Para envios en riesgo o tiempos: mas es peor.
     invertidoParaBueno = false,
 }: {
@@ -25,18 +29,13 @@ function KpiTile({
     value: number | null;
     delta: number | null;
     icon: LucideIcon;
-    formatter?: (n: number) => string;
+    suffix?: string;
+    decimals?: number;
     invertidoParaBueno?: boolean;
 }) {
     const mostrarDelta = delta !== null && Number.isFinite(delta);
     const isPositivo = (delta ?? 0) >= 0;
     const esBueno = invertidoParaBueno ? !isPositivo : isPositivo;
-    const displayValue =
-        value === null
-            ? "—"
-            : formatter
-                ? formatter(value)
-                : value.toLocaleString("es-AR");
 
     return (
         <div className={`flex flex-col gap-3 ${cardClass}`}>
@@ -46,7 +45,18 @@ function KpiTile({
             </div>
 
             <div className="font-mono text-2xl font-semibold text-zinc-50">
-                {displayValue}
+                {value === null ? (
+                    "—"
+                ) : (
+                    <CountUp
+                        end={value}
+                        duration={1.2}
+                        separator="."
+                        decimal=","
+                        decimals={decimals}
+                        suffix={suffix}
+                    />
+                )}
             </div>
 
             {mostrarDelta ? (
@@ -99,14 +109,16 @@ export default function LogisticsKpiStrip({ kpis }: Props) {
                 value={kpis.on_time.porcentaje_actual}
                 delta={deltaOnTime}
                 icon={Clock}
-                formatter={(n) => `${n.toFixed(1)}%`}
+                suffix="%"
+                decimals={1}
             />
             <KpiTile
                 label="Tiempo tránsito"
                 value={kpis.tiempo_transito_dias.actual}
                 delta={deltaTransito}
                 icon={Timer}
-                formatter={(n) => `${n.toFixed(1)} días`}
+                suffix=" días"
+                decimals={1}
                 invertidoParaBueno
             />
             <KpiTile

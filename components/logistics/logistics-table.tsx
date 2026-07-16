@@ -1,13 +1,25 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { Pagination } from "@/components/shared/Pagination";
+import { chartCategoryColors } from "@/styles/theme";
 import type { Shipment } from "@/types/types";
 
-const STATES = ["Todos", "PENDIENTE", "ASIGNADO", "RETIRADO", "EN_CAMINO", "ENTREGADO"];
+const STATES = ["Todos", "PENDIENTE", "ASIGNADO", "RETIRADO", "EN_CAMINO", "ENTREGADO"] as const;
 const PAGE_SIZE = 10;
 
-// Alineado con la paleta del theme (emerald/amber/rose/violet/cyan/orange).
+// Mismos colores que los gráficos y el mapa (chartCategoryColors del theme),
+// para que un envío ENTREGADO sea del mismo verde en el chip, en el badge
+// de la tabla, en el donut y en el marcador del mapa.
+const ESTADO_COLOR: Record<string, string> = {
+    Todos: chartCategoryColors.violet,
+    PENDIENTE: chartCategoryColors.amber,
+    ASIGNADO: chartCategoryColors.cyan,
+    RETIRADO: chartCategoryColors.orange,
+    EN_CAMINO: chartCategoryColors.violet,
+    ENTREGADO: chartCategoryColors.emerald,
+};
+
 const stateBadge = (state: string) => {
     const map: Record<string, string> = {
         PENDIENTE: "bg-amber-400/10 text-amber-400",
@@ -24,7 +36,7 @@ type Props = {
 };
 
 export default function LogisticsTable({ shipments }: Props) {
-    const [filter, setFilter] = useState("Todos");
+    const [filter, setFilter] = useState<(typeof STATES)[number]>("Todos");
     const [page, setPage] = useState(1);
 
     const filtered =
@@ -34,10 +46,7 @@ export default function LogisticsTable({ shipments }: Props) {
                 ? shipments
                 : shipments.filter((s) => s.estado === filter);
 
-    const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
-
     useEffect(() => { setPage(1); }, [filter, shipments]);
-    useEffect(() => { if (page > totalPages) setPage(totalPages); }, [page, totalPages]);
 
     const pageStart = (page - 1) * PAGE_SIZE;
     const pageEnd = pageStart + PAGE_SIZE;
@@ -45,22 +54,25 @@ export default function LogisticsTable({ shipments }: Props) {
 
     return (
         <>
-            <div className="flex gap-2 mb-4 flex-wrap">
-                {STATES.map((e) => {
-                    const count = e === "Todos"
+            <div className="flex flex-wrap gap-2 mb-4">
+                {STATES.map((estado) => {
+                    const count = estado === "Todos"
                         ? shipments?.length ?? 0
-                        : shipments?.filter((s) => s.estado === e).length ?? 0;
+                        : shipments?.filter((s) => s.estado === estado).length ?? 0;
+                    const isSelected = filter === estado;
+                    const color = ESTADO_COLOR[estado] ?? "#a1a1aa";
                     return (
                         <button
-                            key={e}
-                            onClick={() => setFilter(e)}
-                            className={`px-3 py-1.5 text-xs font-mono rounded-md border transition-colors ${filter === e
-                                    ? "bg-violet-500/20 border-violet-500/40 text-violet-300"
-                                    : "bg-zinc-900 border-zinc-800 text-zinc-400 hover:border-violet-500/40 hover:text-zinc-200"
-                                }`}
+                            key={estado}
+                            onClick={() => setFilter(estado)}
+                            style={isSelected ? { borderColor: color, backgroundColor: `${color}1a`, color } : undefined}
+                            className={[
+                                "rounded-full border px-3 py-1 font-mono text-xs uppercase tracking-wide transition-colors",
+                                isSelected ? "" : "border-zinc-700 text-zinc-400 hover:border-zinc-600 hover:text-zinc-300",
+                            ].join(" ")}
                         >
-                            {e}
-                            <span className="ml-1.5 opacity-60">({count})</span>
+                            {estado}
+                            <span className="ml-1.5 opacity-70">({count})</span>
                         </button>
                     );
                 })}
@@ -116,34 +128,14 @@ export default function LogisticsTable({ shipments }: Props) {
                     </tbody>
                 </table>
 
-                {filtered.length > PAGE_SIZE && (
-                    <div className="flex items-center justify-between px-4 py-3 border-t border-zinc-800 bg-zinc-900/50">
-                        <span className="text-xs font-mono text-zinc-500">
-                            {pageStart + 1}–{Math.min(pageEnd, filtered.length)} de {filtered.length}
-                        </span>
-                        <div className="flex items-center gap-1">
-                            <button
-                                onClick={() => setPage((p) => Math.max(1, p - 1))}
-                                disabled={page === 1}
-                                className="p-1.5 rounded border border-zinc-800 text-zinc-400 hover:border-violet-500/40 hover:text-zinc-200 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
-                                aria-label="Página anterior"
-                            >
-                                <ChevronLeft className="h-4 w-4" />
-                            </button>
-                            <span className="text-xs font-mono px-3 text-zinc-400">
-                                {page} / {totalPages}
-                            </span>
-                            <button
-                                onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-                                disabled={page === totalPages}
-                                className="p-1.5 rounded border border-zinc-800 text-zinc-400 hover:border-violet-500/40 hover:text-zinc-200 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
-                                aria-label="Página siguiente"
-                            >
-                                <ChevronRight className="h-4 w-4" />
-                            </button>
-                        </div>
-                    </div>
-                )}
+                <div className="px-4 pb-3">
+                    <Pagination
+                        page={page}
+                        total={filtered.length}
+                        pageLimit={PAGE_SIZE}
+                        onPageChange={setPage}
+                    />
+                </div>
             </div>
         </>
     );
