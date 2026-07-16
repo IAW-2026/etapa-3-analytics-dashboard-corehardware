@@ -36,10 +36,11 @@ async function fetchSellersNamesIds(): Promise<SellerNameId[] | null> {
     }
 }
 
-type searchParams = Promise<{ maxProducts?: number, sellerId?: string }>
+type searchParams = Promise<{ maxProducts?: string; sellerId?: string }>
 
 export default async function BestSellingProductsPage({ searchParams }: { searchParams: searchParams }) {
-    const { maxProducts, sellerId } = await searchParams;
+    const { maxProducts: maxProductsParam, sellerId } = await searchParams;
+    const maxProducts = maxProductsParam ? Number.parseInt(maxProductsParam, 10) : undefined;
     const products = await fetchBestSellingProducts(sellerId, maxProducts);
     const sellers = await fetchSellersNamesIds();
     return <ProductsView products={products} maxProducts={maxProducts} sellersNamesIds={sellers} sellerId={sellerId} />;
