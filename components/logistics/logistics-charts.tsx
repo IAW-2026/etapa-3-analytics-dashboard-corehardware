@@ -16,6 +16,7 @@ import {
     YAxis,
 } from "recharts";
 import type { Shipment } from "@/types/types";
+import { cardClass, cardLabelClass } from "@/styles/theme";
 
 type Props = {
     shipments: Shipment[] | null;
@@ -54,7 +55,6 @@ function buildEstadoDistribucion(shipments: Shipment[]) {
 }
 
 function buildCargaConOnTimePorOperador(shipments: Shipment[]) {
-    // Por cada operador: envios totales, y de los entregados, cuantos on-time / tarde.
     const map = new Map<string, { total: number; aTiempo: number; tarde: number; enCurso: number }>();
     for (const s of shipments) {
         const nombre = s.operador ? s.operador.nombre : "Sin asignar";
@@ -124,11 +124,9 @@ function buildEntregasPorSemana(shipments: Shipment[]) {
     );
     if (entregados.length === 0) return [];
 
-    // Agrupar por semana (yyyy-Www)
     const buckets = new Map<string, { semana: string; count: number; ts: number }>();
     for (const s of entregados) {
         const d = new Date(s.fecha_de_entrega!);
-        // Inicio de la semana (domingo)
         const inicio = new Date(d);
         inicio.setDate(d.getDate() - d.getDay());
         inicio.setHours(0, 0, 0, 0);
@@ -150,7 +148,7 @@ function CountTooltip({ active, payload }: { active?: boolean; payload?: { name:
     if (!active || !payload?.length) return null;
     const entry = payload[0];
     return (
-        <div className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-lg px-3 py-2 text-xs shadow-sm">
+        <div className="bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-2 text-xs shadow-sm">
             <p style={{ color: entry.color }} className="font-mono">{entry.name}: {entry.value}</p>
         </div>
     );
@@ -159,7 +157,7 @@ function CountTooltip({ active, payload }: { active?: boolean; payload?: { name:
 function MontoTooltip({ active, payload, label }: { active?: boolean; payload?: { value: number; color: string }[]; label?: string }) {
     if (!active || !payload?.length) return null;
     return (
-        <div className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-lg px-3 py-2 text-xs shadow-sm">
+        <div className="bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-2 text-xs shadow-sm">
             <p className="font-mono" style={{ color: payload[0].color }}>{label}: {formatCurrency(payload[0].value)}</p>
         </div>
     );
@@ -176,8 +174,8 @@ function OperadorTooltip({
 }) {
     if (!active || !payload?.length) return null;
     return (
-        <div className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-lg px-3 py-2 text-xs shadow-sm">
-            <p className="font-mono text-neutral-500 dark:text-neutral-400 mb-1">{label}</p>
+        <div className="bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-2 text-xs shadow-sm">
+            <p className="font-mono text-zinc-500 mb-1">{label}</p>
             {payload.map((entry) => (
                 <p key={entry.dataKey} style={{ color: entry.color }} className="font-mono">
                     {entry.name}: {entry.value}
@@ -199,10 +197,8 @@ export default function LogisticsCharts({ shipments }: Props) {
 
     return (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-6">
-            <div className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-lg p-5">
-                <h2 className="text-xs font-mono tracking-[0.1em] uppercase text-neutral-400 dark:text-neutral-500 mb-4">
-                    Distribución por estado
-                </h2>
+            <div className={cardClass}>
+                <h2 className={`${cardLabelClass} mb-4`}>Distribución por estado</h2>
                 <ResponsiveContainer width="100%" height={240}>
                     <PieChart>
                         <Pie data={estadoDistribucion} dataKey="count" nameKey="label" innerRadius={55} outerRadius={85} paddingAngle={2}>
@@ -216,10 +212,8 @@ export default function LogisticsCharts({ shipments }: Props) {
                 </ResponsiveContainer>
             </div>
 
-            <div className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-lg p-5">
-                <h2 className="text-xs font-mono tracking-[0.1em] uppercase text-neutral-400 dark:text-neutral-500 mb-4">
-                    Carga y cumplimiento por operador
-                </h2>
+            <div className={cardClass}>
+                <h2 className={`${cardLabelClass} mb-4`}>Carga y cumplimiento por operador</h2>
                 <ResponsiveContainer width="100%" height={240}>
                     <BarChart data={cargaPorOperador} margin={{ top: 4, right: 4, left: 0, bottom: 0 }}>
                         <CartesianGrid stroke="currentColor" strokeOpacity={0.06} vertical={false} />
@@ -246,10 +240,8 @@ export default function LogisticsCharts({ shipments }: Props) {
             </div>
 
             {slaCumplimiento.length > 0 && (
-                <div className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-lg p-5">
-                    <h2 className="text-xs font-mono tracking-[0.1em] uppercase text-neutral-400 dark:text-neutral-500 mb-4">
-                        Cumplimiento de SLA (entregados)
-                    </h2>
+                <div className={cardClass}>
+                    <h2 className={`${cardLabelClass} mb-4`}>Cumplimiento de SLA (entregados)</h2>
                     <ResponsiveContainer width="100%" height={240}>
                         <PieChart>
                             <Pie data={slaCumplimiento} dataKey="count" nameKey="label" innerRadius={55} outerRadius={85} paddingAngle={2}>
@@ -264,10 +256,8 @@ export default function LogisticsCharts({ shipments }: Props) {
                 </div>
             )}
 
-            <div className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-lg p-5">
-                <h2 className="text-xs font-mono tracking-[0.1em] uppercase text-neutral-400 dark:text-neutral-500 mb-4">
-                    Monto por estado
-                </h2>
+            <div className={cardClass}>
+                <h2 className={`${cardLabelClass} mb-4`}>Monto por estado</h2>
                 <ResponsiveContainer width="100%" height={240}>
                     <BarChart data={montoPorEstado} margin={{ top: 4, right: 4, left: 0, bottom: 0 }}>
                         <CartesianGrid stroke="currentColor" strokeOpacity={0.06} vertical={false} />
@@ -295,10 +285,8 @@ export default function LogisticsCharts({ shipments }: Props) {
             </div>
 
             {topDestinos.length > 0 && (
-                <div className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-lg p-5">
-                    <h2 className="text-xs font-mono tracking-[0.1em] uppercase text-neutral-400 dark:text-neutral-500 mb-4">
-                        Top {topDestinos.length} destinos
-                    </h2>
+                <div className={cardClass}>
+                    <h2 className={`${cardLabelClass} mb-4`}>Top {topDestinos.length} destinos</h2>
                     <ResponsiveContainer width="100%" height={240}>
                         <BarChart
                             data={topDestinos}
@@ -329,10 +317,8 @@ export default function LogisticsCharts({ shipments }: Props) {
             )}
 
             {entregasPorSemana.length > 0 && (
-                <div className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-lg p-5 lg:col-span-2">
-                    <h2 className="text-xs font-mono tracking-[0.1em] uppercase text-neutral-400 dark:text-neutral-500 mb-4">
-                        Entregas por semana
-                    </h2>
+                <div className={`${cardClass} lg:col-span-2`}>
+                    <h2 className={`${cardLabelClass} mb-4`}>Entregas por semana</h2>
                     <ResponsiveContainer width="100%" height={240}>
                         <LineChart data={entregasPorSemana} margin={{ top: 4, right: 16, left: 0, bottom: 0 }}>
                             <CartesianGrid stroke="currentColor" strokeOpacity={0.06} vertical={false} />
