@@ -55,6 +55,7 @@ export type Buyer = {
     mail: string;
     celular: string;
     condicion_iva: string;
+    fecha_alta: string;
 };
 
 export type Seller = {
@@ -64,6 +65,7 @@ export type Seller = {
     mail: string;
     celular: string;
     condicion_iva: string;
+    fecha_alta: string;
 };
 
 export type SellerNameId = {
@@ -78,6 +80,7 @@ export type Operator = {
     dni: string;
     mail: string;
     celular: string;
+    fecha_alta: string;
 };
 
 export type Order = {
