@@ -1,0 +1,51 @@
+@import "tailwindcss";
+
+:root {
+  color-scheme: dark;
+}
+
+@theme inline {
+  --font-sans: var(--font-inter);
+  --font-mono: var(--font-inter);
+}
+
+@layer base {
+  body {
+    @apply bg-zinc-950 text-zinc-100 antialiased;
+    font-family: var(--font-sans), Arial, Helvetica, sans-serif;
+  }
+}
+
+/* Leaflet popup: override del blanco por defecto para que combine con el
+   theme dark del dashboard. Se aplica solo dentro de los mapas Leaflet, no
+   afecta el resto de la UI. */
+.leaflet-popup-content-wrapper,
+.leaflet-popup-tip {
+  background: #18181b; /* zinc-900 */
+  color: #e4e4e7; /* zinc-200 */
+  border: 1px solid #27272a; /* zinc-800 */
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+}
+
+.leaflet-popup-content {
+  color: #e4e4e7;
+  margin: 10px 12px;
+}
+
+.leaflet-popup-close-button {
+  color: #a1a1aa !important; /* zinc-400 */
+}
+
+.leaflet-popup-close-button:hover {
+  color: #e4e4e7 !important;
+}
+
+.leaflet-container a.leaflet-popup-close-button {
+  padding: 4px 6px 0 0;
+}
+
+/* Tiles del mapa en dark tienen mejor contraste sin el brillo del OSM por
+   defecto — filtro suave para reducir la saturación blanca. */
+.leaflet-tile-pane {
+  filter: brightness(0.85) contrast(1.05);
+}
