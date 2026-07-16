@@ -66,6 +66,11 @@ export type Seller = {
     condicion_iva: string;
 };
 
+export type SellerNameId = {
+    id: string,
+    name: string,
+}
+
 export type Operator = {
     id: string;
     nombre: string;

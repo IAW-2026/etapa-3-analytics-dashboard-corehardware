@@ -1,15 +1,43 @@
 "use client";
 
-import { useRouter } from "next/navigation";
-import type { BestSellingProduct } from "@/types/types";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import type { BestSellingProduct, SellerNameId } from "@/types/types";
+import FilterBySellerInput from "@/components/best-selling-products/filter-by-seller-input";
 
 type Props = {
     products: BestSellingProduct[] | null;
     maxProducts?: number;
+    sellerId?: string;
+    sellersNamesIds: SellerNameId[] | null;
 };
 
-export default function ProductsView({ products, maxProducts = 5 }: Props) {
+export default function ProductsView({ products, maxProducts = 5, sellerId, sellersNamesIds }: Props) {
     const router = useRouter();
+    const pathname = usePathname();
+    const searchParams = useSearchParams();
+
+    const updateRoute = (params: URLSearchParams) => {
+        const query = params.toString();
+        router.push(`${pathname}${query ? `?${query}` : ""}`, { scroll: false });
+    };
+
+    const handleMaxProductsChange = (value: number) => {
+        const params = new URLSearchParams(searchParams.toString());
+        params.set("maxProducts", value.toString());
+        updateRoute(params);
+    };
+
+    const handleSellerSelect = (selectedSellerId?: string) => {
+        const params = new URLSearchParams(searchParams.toString());
+
+        if (selectedSellerId) {
+            params.set("sellerId", selectedSellerId);
+        } else {
+            params.delete("sellerId");
+        }
+
+        updateRoute(params);
+    };
 
     return (
         <main className="p-8 bg-neutral-50 dark:bg-neutral-950 min-h-screen">
@@ -20,20 +48,26 @@ export default function ProductsView({ products, maxProducts = 5 }: Props) {
                 <div className="h-px w-8 bg-violet-500 mt-2" />
             </div>
 
-            <div className="flex items-center gap-3 mb-8">
-                {[5, 10, 15].map((value) => (
-                    <button
-                        key={value}
-                        type="button"
-                        className="rounded-full border border-neutral-300 bg-neutral-100 px-4 py-2 text-sm font-medium text-neutral-700 disabled:cursor-not-allowed disabled:opacity-50 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-200"
-                        disabled={maxProducts === value}
-                        onClick={() => {
-                            router.push(`?maxProducts=${value}`);
-                        }}
-                    >
-                        {value}
-                    </button>
-                ))}
+            <div className="mb-8 space-y-4 lg:flex lg:items-end lg:justify-between lg:space-y-0">
+                <FilterBySellerInput
+                    sellersNamesIds={sellersNamesIds}
+                    selectedSellerId={sellerId}
+                    onSelectSeller={handleSellerSelect}
+                />
+
+                <div className="flex flex-wrap items-center gap-3">
+                    {[5, 10, 15].map((value) => (
+                        <button
+                            key={value}
+                            type="button"
+                            className="rounded-full border border-neutral-300 bg-neutral-100 px-4 py-2 text-sm font-medium text-neutral-700 disabled:cursor-not-allowed disabled:opacity-50 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-200"
+                            disabled={maxProducts === value}
+                            onClick={() => handleMaxProductsChange(value)}
+                        >
+                            {value}
+                        </button>
+                    ))}
+                </div>
             </div>
 
             {(!products || products.length === 0) ? (
@@ -67,7 +101,7 @@ export default function ProductsView({ products, maxProducts = 5 }: Props) {
                         </tbody>
                     </table>
                 </div>
-            )}                            
+            )}
         </main>
-        )
+    );
 }
