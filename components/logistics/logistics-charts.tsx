@@ -15,8 +15,8 @@ import {
     XAxis,
     YAxis,
 } from "recharts";
+import { cardClass, cardLabelClass, chartCategoryColors, chartColors } from "@/styles/theme";
 import type { Shipment } from "@/types/types";
-import { cardClass, cardLabelClass } from "@/styles/theme";
 
 type Props = {
     shipments: Shipment[] | null;
@@ -24,12 +24,13 @@ type Props = {
 
 const ESTADOS = ["PENDIENTE", "ASIGNADO", "RETIRADO", "EN_CAMINO", "ENTREGADO"] as const;
 
+// Colores alineados con la paleta del dashboard (theme.ts).
 const ESTADO_COLORS: Record<string, string> = {
-    PENDIENTE: "#eab308",
-    ASIGNADO: "#22d3ee",
-    RETIRADO: "#fb923c",
-    EN_CAMINO: "#60a5fa",
-    ENTREGADO: "#34d399",
+    PENDIENTE: chartCategoryColors.amber,
+    ASIGNADO: chartCategoryColors.cyan,
+    RETIRADO: chartCategoryColors.orange,
+    EN_CAMINO: chartCategoryColors.violet,
+    ENTREGADO: chartCategoryColors.emerald,
 };
 
 const ESTADO_LABELS: Record<string, string> = {
@@ -40,7 +41,10 @@ const ESTADO_LABELS: Record<string, string> = {
     ENTREGADO: "Entregado",
 };
 
-const SLA_COLORS = { "A tiempo": "#34d399", "Tarde": "#f87171" };
+const SLA_COLORS = {
+    "A tiempo": chartCategoryColors.emerald,
+    "Tarde": chartCategoryColors.rose,
+};
 
 function formatCurrency(value: number): string {
     return `$${value.toLocaleString("es-AR")}`;
@@ -98,8 +102,6 @@ function buildMontoPorEstado(shipments: Shipment[]) {
         .filter((b) => b.monto > 0);
 }
 
-// Extrae la ciudad como la parte 2 de "Calle X, Ciudad, Provincia".
-// Si la direccion no tiene coma, usa la direccion completa.
 function extraerCiudad(direccion: string): string {
     const partes = direccion.split(",").map((p) => p.trim()).filter(Boolean);
     if (partes.length >= 2) return partes[1];
@@ -144,12 +146,19 @@ function buildEntregasPorSemana(shipments: Shipment[]) {
     return Array.from(buckets.values()).sort((a, b) => a.ts - b.ts);
 }
 
+// Tooltip base con estilo consistente con el theme dark del dashboard.
+const tooltipContainer = "rounded-lg border px-3 py-2 text-xs shadow-sm font-mono";
+const tooltipStyle = {
+    background: chartColors.tooltipBg,
+    borderColor: chartColors.tooltipBorder,
+};
+
 function CountTooltip({ active, payload }: { active?: boolean; payload?: { name: string; value: number; color: string }[] }) {
     if (!active || !payload?.length) return null;
     const entry = payload[0];
     return (
-        <div className="bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-2 text-xs shadow-sm">
-            <p style={{ color: entry.color }} className="font-mono">{entry.name}: {entry.value}</p>
+        <div className={tooltipContainer} style={tooltipStyle}>
+            <p style={{ color: entry.color }}>{entry.name}: {entry.value}</p>
         </div>
     );
 }
@@ -157,8 +166,8 @@ function CountTooltip({ active, payload }: { active?: boolean; payload?: { name:
 function MontoTooltip({ active, payload, label }: { active?: boolean; payload?: { value: number; color: string }[]; label?: string }) {
     if (!active || !payload?.length) return null;
     return (
-        <div className="bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-2 text-xs shadow-sm">
-            <p className="font-mono" style={{ color: payload[0].color }}>{label}: {formatCurrency(payload[0].value)}</p>
+        <div className={tooltipContainer} style={tooltipStyle}>
+            <p style={{ color: payload[0].color }}>{label}: {formatCurrency(payload[0].value)}</p>
         </div>
     );
 }
@@ -174,13 +183,28 @@ function OperadorTooltip({
 }) {
     if (!active || !payload?.length) return null;
     return (
-        <div className="bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-2 text-xs shadow-sm">
-            <p className="font-mono text-zinc-500 mb-1">{label}</p>
+        <div className={tooltipContainer} style={tooltipStyle}>
+            <p className="text-zinc-400 mb-1">{label}</p>
             {payload.map((entry) => (
-                <p key={entry.dataKey} style={{ color: entry.color }} className="font-mono">
+                <p key={entry.dataKey} style={{ color: entry.color }}>
                     {entry.name}: {entry.value}
                 </p>
             ))}
+        </div>
+    );
+}
+
+// Configuracion comun de ejes/grid para todos los charts.
+const axisTick = { fontSize: 11, fontFamily: "monospace", fill: chartColors.axis };
+const gridProps = { stroke: chartColors.grid, strokeOpacity: 0.5 };
+
+function ChartCard({ title, children, wide = false }: { title: string; children: React.ReactNode; wide?: boolean }) {
+    return (
+        <div className={`${cardClass} ${wide ? "lg:col-span-2" : ""}`}>
+            <h2 className={`${cardLabelClass} mb-4`}>{title}</h2>
+            <ResponsiveContainer width="100%" height={240}>
+                {children as React.ReactElement}
+            </ResponsiveContainer>
         </div>
     );
 }
@@ -196,158 +220,90 @@ export default function LogisticsCharts({ shipments }: Props) {
     const entregasPorSemana = buildEntregasPorSemana(shipments);
 
     return (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-6">
-            <div className={cardClass}>
-                <h2 className={`${cardLabelClass} mb-4`}>Distribución por estado</h2>
-                <ResponsiveContainer width="100%" height={240}>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            <ChartCard title="Distribución por estado">
+                <PieChart>
+                    <Pie data={estadoDistribucion} dataKey="count" nameKey="label" innerRadius={55} outerRadius={85} paddingAngle={2}>
+                        {estadoDistribucion.map((entry) => (
+                            <Cell key={entry.estado} fill={ESTADO_COLORS[entry.estado]} />
+                        ))}
+                    </Pie>
+                    <Tooltip content={<CountTooltip />} />
+                    <Legend wrapperStyle={{ fontSize: 11, fontFamily: "monospace", color: chartColors.axis }} />
+                </PieChart>
+            </ChartCard>
+
+            <ChartCard title="Carga y cumplimiento por operador">
+                <BarChart data={cargaPorOperador} margin={{ top: 4, right: 4, left: 0, bottom: 0 }}>
+                    <CartesianGrid {...gridProps} vertical={false} />
+                    <XAxis dataKey="nombre" tick={axisTick} axisLine={false} tickLine={false} />
+                    <YAxis tick={axisTick} axisLine={false} tickLine={false} width={30} allowDecimals={false} />
+                    <Tooltip content={<OperadorTooltip />} cursor={{ fill: chartColors.grid, opacity: 0.4 }} />
+                    <Legend wrapperStyle={{ fontSize: 11, fontFamily: "monospace", color: chartColors.axis }} />
+                    <Bar dataKey="aTiempo" name="Entregados a tiempo" stackId="op" fill={chartCategoryColors.emerald} maxBarSize={40} />
+                    <Bar dataKey="tarde" name="Entregados tarde" stackId="op" fill={chartCategoryColors.rose} maxBarSize={40} />
+                    <Bar dataKey="enCurso" name="En curso" stackId="op" fill={chartCategoryColors.zinc} maxBarSize={40} radius={[4, 4, 0, 0]} />
+                </BarChart>
+            </ChartCard>
+
+            {slaCumplimiento.length > 0 && (
+                <ChartCard title="Cumplimiento de SLA (entregados)">
                     <PieChart>
-                        <Pie data={estadoDistribucion} dataKey="count" nameKey="label" innerRadius={55} outerRadius={85} paddingAngle={2}>
-                            {estadoDistribucion.map((entry) => (
-                                <Cell key={entry.estado} fill={ESTADO_COLORS[entry.estado]} />
+                        <Pie data={slaCumplimiento} dataKey="count" nameKey="label" innerRadius={55} outerRadius={85} paddingAngle={2}>
+                            {slaCumplimiento.map((entry) => (
+                                <Cell key={entry.label} fill={SLA_COLORS[entry.label as keyof typeof SLA_COLORS]} />
                             ))}
                         </Pie>
                         <Tooltip content={<CountTooltip />} />
-                        <Legend wrapperStyle={{ fontSize: 11, fontFamily: "monospace" }} />
+                        <Legend wrapperStyle={{ fontSize: 11, fontFamily: "monospace", color: chartColors.axis }} />
                     </PieChart>
-                </ResponsiveContainer>
-            </div>
-
-            <div className={cardClass}>
-                <h2 className={`${cardLabelClass} mb-4`}>Carga y cumplimiento por operador</h2>
-                <ResponsiveContainer width="100%" height={240}>
-                    <BarChart data={cargaPorOperador} margin={{ top: 4, right: 4, left: 0, bottom: 0 }}>
-                        <CartesianGrid stroke="currentColor" strokeOpacity={0.06} vertical={false} />
-                        <XAxis
-                            dataKey="nombre"
-                            tick={{ fontSize: 11, fontFamily: "monospace", fill: "currentColor", opacity: 0.4 }}
-                            axisLine={false}
-                            tickLine={false}
-                        />
-                        <YAxis
-                            tick={{ fontSize: 11, fontFamily: "monospace", fill: "currentColor", opacity: 0.4 }}
-                            axisLine={false}
-                            tickLine={false}
-                            width={30}
-                            allowDecimals={false}
-                        />
-                        <Tooltip content={<OperadorTooltip />} cursor={{ fill: "currentColor", opacity: 0.04 }} />
-                        <Legend wrapperStyle={{ fontSize: 11, fontFamily: "monospace" }} />
-                        <Bar dataKey="aTiempo" name="Entregados a tiempo" stackId="op" fill="#34d399" maxBarSize={40} />
-                        <Bar dataKey="tarde" name="Entregados tarde" stackId="op" fill="#f87171" maxBarSize={40} />
-                        <Bar dataKey="enCurso" name="En curso" stackId="op" fill="#a1a1aa" maxBarSize={40} radius={[4, 4, 0, 0]} />
-                    </BarChart>
-                </ResponsiveContainer>
-            </div>
-
-            {slaCumplimiento.length > 0 && (
-                <div className={cardClass}>
-                    <h2 className={`${cardLabelClass} mb-4`}>Cumplimiento de SLA (entregados)</h2>
-                    <ResponsiveContainer width="100%" height={240}>
-                        <PieChart>
-                            <Pie data={slaCumplimiento} dataKey="count" nameKey="label" innerRadius={55} outerRadius={85} paddingAngle={2}>
-                                {slaCumplimiento.map((entry) => (
-                                    <Cell key={entry.label} fill={SLA_COLORS[entry.label as keyof typeof SLA_COLORS]} />
-                                ))}
-                            </Pie>
-                            <Tooltip content={<CountTooltip />} />
-                            <Legend wrapperStyle={{ fontSize: 11, fontFamily: "monospace" }} />
-                        </PieChart>
-                    </ResponsiveContainer>
-                </div>
+                </ChartCard>
             )}
 
-            <div className={cardClass}>
-                <h2 className={`${cardLabelClass} mb-4`}>Monto por estado</h2>
-                <ResponsiveContainer width="100%" height={240}>
-                    <BarChart data={montoPorEstado} margin={{ top: 4, right: 4, left: 0, bottom: 0 }}>
-                        <CartesianGrid stroke="currentColor" strokeOpacity={0.06} vertical={false} />
-                        <XAxis
-                            dataKey="label"
-                            tick={{ fontSize: 11, fontFamily: "monospace", fill: "currentColor", opacity: 0.4 }}
-                            axisLine={false}
-                            tickLine={false}
-                        />
-                        <YAxis
-                            tick={{ fontSize: 11, fontFamily: "monospace", fill: "currentColor", opacity: 0.4 }}
-                            axisLine={false}
-                            tickLine={false}
-                            width={70}
-                            tickFormatter={formatCurrency}
-                        />
-                        <Tooltip content={<MontoTooltip />} cursor={{ fill: "currentColor", opacity: 0.04 }} />
-                        <Bar dataKey="monto" name="Monto" radius={[4, 4, 0, 0]} maxBarSize={40}>
-                            {montoPorEstado.map((entry) => (
-                                <Cell key={entry.estado} fill={ESTADO_COLORS[entry.estado]} />
-                            ))}
-                        </Bar>
-                    </BarChart>
-                </ResponsiveContainer>
-            </div>
+            <ChartCard title="Monto por estado">
+                <BarChart data={montoPorEstado} margin={{ top: 4, right: 4, left: 0, bottom: 0 }}>
+                    <CartesianGrid {...gridProps} vertical={false} />
+                    <XAxis dataKey="label" tick={axisTick} axisLine={false} tickLine={false} />
+                    <YAxis tick={axisTick} axisLine={false} tickLine={false} width={70} tickFormatter={formatCurrency} />
+                    <Tooltip content={<MontoTooltip />} cursor={{ fill: chartColors.grid, opacity: 0.4 }} />
+                    <Bar dataKey="monto" name="Monto" radius={[4, 4, 0, 0]} maxBarSize={40}>
+                        {montoPorEstado.map((entry) => (
+                            <Cell key={entry.estado} fill={ESTADO_COLORS[entry.estado]} />
+                        ))}
+                    </Bar>
+                </BarChart>
+            </ChartCard>
 
             {topDestinos.length > 0 && (
-                <div className={cardClass}>
-                    <h2 className={`${cardLabelClass} mb-4`}>Top {topDestinos.length} destinos</h2>
-                    <ResponsiveContainer width="100%" height={240}>
-                        <BarChart
-                            data={topDestinos}
-                            layout="vertical"
-                            margin={{ top: 4, right: 4, left: 0, bottom: 0 }}
-                        >
-                            <CartesianGrid stroke="currentColor" strokeOpacity={0.06} horizontal={false} />
-                            <XAxis
-                                type="number"
-                                tick={{ fontSize: 11, fontFamily: "monospace", fill: "currentColor", opacity: 0.4 }}
-                                axisLine={false}
-                                tickLine={false}
-                                allowDecimals={false}
-                            />
-                            <YAxis
-                                dataKey="ciudad"
-                                type="category"
-                                tick={{ fontSize: 11, fontFamily: "monospace", fill: "currentColor", opacity: 0.4 }}
-                                axisLine={false}
-                                tickLine={false}
-                                width={120}
-                            />
-                            <Tooltip content={<CountTooltip />} cursor={{ fill: "currentColor", opacity: 0.04 }} />
-                            <Bar dataKey="count" name="Envíos" fill="#a78bfa" radius={[0, 4, 4, 0]} maxBarSize={20} />
-                        </BarChart>
-                    </ResponsiveContainer>
-                </div>
+                <ChartCard title={`Top ${topDestinos.length} destinos`}>
+                    <BarChart data={topDestinos} layout="vertical" margin={{ top: 4, right: 4, left: 0, bottom: 0 }}>
+                        <CartesianGrid {...gridProps} horizontal={false} />
+                        <XAxis type="number" tick={axisTick} axisLine={false} tickLine={false} allowDecimals={false} />
+                        <YAxis dataKey="ciudad" type="category" tick={axisTick} axisLine={false} tickLine={false} width={120} />
+                        <Tooltip content={<CountTooltip />} cursor={{ fill: chartColors.grid, opacity: 0.4 }} />
+                        <Bar dataKey="count" name="Envíos" fill={chartCategoryColors.violet} radius={[0, 4, 4, 0]} maxBarSize={20} />
+                    </BarChart>
+                </ChartCard>
             )}
 
             {entregasPorSemana.length > 0 && (
-                <div className={`${cardClass} lg:col-span-2`}>
-                    <h2 className={`${cardLabelClass} mb-4`}>Entregas por semana</h2>
-                    <ResponsiveContainer width="100%" height={240}>
-                        <LineChart data={entregasPorSemana} margin={{ top: 4, right: 16, left: 0, bottom: 0 }}>
-                            <CartesianGrid stroke="currentColor" strokeOpacity={0.06} vertical={false} />
-                            <XAxis
-                                dataKey="semana"
-                                tick={{ fontSize: 11, fontFamily: "monospace", fill: "currentColor", opacity: 0.4 }}
-                                axisLine={false}
-                                tickLine={false}
-                            />
-                            <YAxis
-                                tick={{ fontSize: 11, fontFamily: "monospace", fill: "currentColor", opacity: 0.4 }}
-                                axisLine={false}
-                                tickLine={false}
-                                width={30}
-                                allowDecimals={false}
-                            />
-                            <Tooltip content={<CountTooltip />} cursor={{ stroke: "currentColor", strokeOpacity: 0.1 }} />
-                            <Line
-                                type="monotone"
-                                dataKey="count"
-                                name="Entregados"
-                                stroke="#34d399"
-                                strokeWidth={2}
-                                dot={{ r: 3, fill: "#34d399" }}
-                                activeDot={{ r: 5 }}
-                            />
-                        </LineChart>
-                    </ResponsiveContainer>
-                </div>
+                <ChartCard title="Entregas por semana" wide>
+                    <LineChart data={entregasPorSemana} margin={{ top: 4, right: 16, left: 0, bottom: 0 }}>
+                        <CartesianGrid {...gridProps} vertical={false} />
+                        <XAxis dataKey="semana" tick={axisTick} axisLine={false} tickLine={false} />
+                        <YAxis tick={axisTick} axisLine={false} tickLine={false} width={30} allowDecimals={false} />
+                        <Tooltip content={<CountTooltip />} cursor={{ stroke: chartColors.grid, strokeOpacity: 0.6 }} />
+                        <Line
+                            type="monotone"
+                            dataKey="count"
+                            name="Entregados"
+                            stroke={chartCategoryColors.emerald}
+                            strokeWidth={2}
+                            dot={{ r: 3, fill: chartCategoryColors.emerald }}
+                            activeDot={{ r: 5 }}
+                        />
+                    </LineChart>
+                </ChartCard>
             )}
         </div>
     );

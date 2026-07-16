@@ -1,6 +1,9 @@
-import { Package, Clock, Truck, Timer, ArrowUpRight, ArrowDownRight } from "lucide-react";
-import type { LogisticaKpis } from "@/types/types";
+"use client";
+
+import CountUp from "react-countup";
+import { Package, Clock, Truck, Timer, ArrowUpRight, ArrowDownRight, type LucideIcon } from "lucide-react";
 import { cardClass, cardLabelClass } from "@/styles/theme";
+import type { LogisticaKpis } from "@/types/types";
 
 type Props = {
     kpis: LogisticaKpis | null;
@@ -18,46 +21,53 @@ function KpiTile({
     delta,
     icon: Icon,
     suffix = "",
-    formatter,
-    // Para envios en riesgo: mas es peor.
+    decimals = 0,
+    // Para envios en riesgo o tiempos: mas es peor.
     invertidoParaBueno = false,
 }: {
     label: string;
     value: number | null;
     delta: number | null;
-    icon: React.ComponentType<{ className?: string }>;
+    icon: LucideIcon;
     suffix?: string;
-    formatter?: (n: number) => string;
+    decimals?: number;
     invertidoParaBueno?: boolean;
 }) {
     const mostrarDelta = delta !== null && Number.isFinite(delta);
     const isPositivo = (delta ?? 0) >= 0;
     const esBueno = invertidoParaBueno ? !isPositivo : isPositivo;
-    const displayValue =
-        value === null
-            ? "—"
-            : formatter
-                ? formatter(value)
-                : `${value.toLocaleString("es-AR")}${suffix}`;
 
     return (
-        <div className={`${cardClass} flex flex-col gap-3`}>
+        <div className={`flex flex-col gap-3 ${cardClass}`}>
             <div className="flex items-center justify-between">
                 <span className={cardLabelClass}>{label}</span>
-                <Icon className="w-4 h-4 text-zinc-600" aria-hidden="true" />
+                <Icon className="h-4 w-4 text-zinc-500" strokeWidth={1.75} />
             </div>
-            <span className="text-2xl font-semibold tracking-tight text-zinc-100 font-mono">
-                {displayValue}
-            </span>
+
+            <div className="font-mono text-2xl font-semibold text-zinc-50">
+                {value === null ? (
+                    "—"
+                ) : (
+                    <CountUp
+                        end={value}
+                        duration={1.2}
+                        separator="."
+                        decimal=","
+                        decimals={decimals}
+                        suffix={suffix}
+                    />
+                )}
+            </div>
+
             {mostrarDelta ? (
                 <div
-                    className={`flex items-center gap-1 text-xs font-mono ${esBueno ? "text-emerald-500" : "text-rose-500"
+                    className={`flex items-center gap-1 text-xs font-mono ${esBueno ? "text-emerald-400" : "text-rose-400"
                         }`}
                 >
                     {isPositivo ? (
-                        <ArrowUpRight className="h-3.5 w-3.5" aria-hidden="true" />
+                        <ArrowUpRight className="h-3.5 w-3.5" />
                     ) : (
-                        <ArrowDownRight className="h-3.5 w-3.5" aria-hidden="true" />
+                        <ArrowDownRight className="h-3.5 w-3.5" />
                     )}
                     <span>{Math.abs(delta).toFixed(1)}% vs período anterior</span>
                 </div>
@@ -71,7 +81,7 @@ function KpiTile({
 export default function LogisticsKpiStrip({ kpis }: Props) {
     if (!kpis) {
         return (
-            <div className={`${cardClass} mb-6`}>
+            <div className={`${cardClass} mb-4`}>
                 <p className="text-sm text-rose-400 font-mono">
                     Error al cargar las métricas de logística
                 </p>
@@ -87,7 +97,7 @@ export default function LogisticsKpiStrip({ kpis }: Props) {
     );
 
     return (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4 mb-4">
             <KpiTile
                 label="Total de envíos"
                 value={kpis.total_envios.actual}
@@ -99,14 +109,16 @@ export default function LogisticsKpiStrip({ kpis }: Props) {
                 value={kpis.on_time.porcentaje_actual}
                 delta={deltaOnTime}
                 icon={Clock}
-                formatter={(n) => `${n.toFixed(1)}%`}
+                suffix="%"
+                decimals={1}
             />
             <KpiTile
                 label="Tiempo tránsito"
                 value={kpis.tiempo_transito_dias.actual}
                 delta={deltaTransito}
                 icon={Timer}
-                formatter={(n) => `${n.toFixed(1)} días`}
+                suffix=" días"
+                decimals={1}
                 invertidoParaBueno
             />
             <KpiTile
