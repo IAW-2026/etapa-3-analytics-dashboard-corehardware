@@ -35,8 +35,8 @@ const navItems: NavItem[] = [
   { href: "/finanzas", label: "Finanzas", icon: Wallet },
   { href: "/logistica", label: "Logística", icon: Truck },
   { href: "/ventas", label: "Ventas", icon: ShoppingCart },
-  { href: "/usuarios", label: "Usuarios", icon: Users },
   { href: "/productos", label: "Productos", icon: ShoppingBag },
+  { href: "/usuarios", label: "Usuarios", icon: Users },
 ];
 
 export function Sidebar() {

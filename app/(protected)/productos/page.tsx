@@ -1,4 +1,4 @@
-import type { BestSellingProduct } from "@/types/types";
+import type { BestSellingProduct, SellerNameId } from "@/types/types";
 import ProductsView from "@/components/best-selling-products/products-view";
 
 async function fetchBestSellingProducts(sellerId?: string, limit?: number): Promise<BestSellingProduct[] | null> {
@@ -22,12 +22,27 @@ async function fetchBestSellingProducts(sellerId?: string, limit?: number): Prom
     }
 }
 
-type searchParams = Promise<{ maxProducts?: number }>
+async function fetchSellersNamesIds(): Promise<SellerNameId[] | null> {
+    try {
+        const res = await fetch(`${process.env.SELLER_APP_URL}/api/sellers/names-ids`, {
+            headers: { "x-api-key": process.env.SELLER_API_KEY! },
+            cache: "no-store",
+        });
+        if (!res.ok) return null;
+        const data = await res.json();
+        return data;
+    } catch {
+        return null;
+    }
+}
+
+type searchParams = Promise<{ maxProducts?: string; sellerId?: string }>
 
 export default async function BestSellingProductsPage({ searchParams }: { searchParams: searchParams }) {
-    const { maxProducts } = await searchParams;
-    const seller = undefined; 
-    const products = await fetchBestSellingProducts(seller, maxProducts);
-    return <ProductsView products={products} maxProducts={maxProducts} />;
+    const { maxProducts: maxProductsParam, sellerId } = await searchParams;
+    const maxProducts = maxProductsParam ? Number.parseInt(maxProductsParam, 10) : undefined;
+    const products = await fetchBestSellingProducts(sellerId, maxProducts);
+    const sellers = await fetchSellersNamesIds();
+    return <ProductsView products={products} maxProducts={maxProducts} sellersNamesIds={sellers} sellerId={sellerId} />;
 }
 

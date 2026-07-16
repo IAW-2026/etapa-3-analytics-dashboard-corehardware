@@ -60,3 +60,7 @@ export const chartCategoryColors = {
   cyan: "#22d3ee",
   orange: "#f97316",
 } as const;
+
+// Acento de marca para elementos de navegación que necesitan destacar
+// sobre el resto del breadcrumb (ej. sección activa en el navbar).
+export const navAccentClass = "text-violet-400";

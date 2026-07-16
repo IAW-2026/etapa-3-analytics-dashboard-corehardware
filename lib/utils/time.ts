@@ -20,3 +20,16 @@ export function formatRelativeTime(seconds: number): string {
   const days = Math.floor(seconds / 86400);
   return `hace ${days}d`;
 }
+
+/**
+ * Formatea una fecha ISO como fecha corta en zona horaria Argentina.
+ * Ej: "2026-07-15T23:30:00.000Z" -> "15/07/2026"
+ */
+export function formatDate(isoDate: string): string {
+  return new Intl.DateTimeFormat("es-AR", {
+    timeZone: "America/Argentina/Buenos_Aires",
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+  }).format(new Date(isoDate));
+}

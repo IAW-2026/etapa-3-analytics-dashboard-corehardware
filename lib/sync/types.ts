@@ -111,10 +111,29 @@ export type Vendedor = {
   mail: string;
   celular: string;
   condicion_iva: string;
-  fecha_creacion: string; // ISO 8601
+  fecha_creacion: string; // ISO 8601 -- tal cual lo manda el Seller App
+  fecha_alta: string;     // agregado en fetchVendedores() a partir de fecha_creacion
 };
 
 export type VendedoresResponse = {
   total: number;
   items: Vendedor[];
+};
+
+export type Operador = {
+  id: string;
+  nombre: string;
+  apellido: string;
+  mail: string;
+  celular: string;
+  dni: string;
+  is_deleted: boolean;
+  total_envios: number;
+  envios_activos: number;
+  fecha_alta: string; // ISO 8601
+};
+
+export type OperadoresResponse = {
+  total: number;
+  items: Operador[];
 };
